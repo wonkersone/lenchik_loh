@@ -13,7 +13,7 @@ const totalScoreEl = document.querySelector("#totalScore");
 ctx.imageSmoothingEnabled = false;
 
 const store = {
-  total: Number(localStorage.getItem("lenchik-arcade-total") || 0),
+  best: JSON.parse(localStorage.getItem("lenchik-arcade-best") || "{}"),
   completed: new Set(JSON.parse(localStorage.getItem("lenchik-arcade-done") || "[]")),
 };
 
@@ -107,8 +107,12 @@ const games = [
 ];
 
 function saveProgress() {
-  localStorage.setItem("lenchik-arcade-total", String(store.total));
+  localStorage.setItem("lenchik-arcade-best", JSON.stringify(store.best));
   localStorage.setItem("lenchik-arcade-done", JSON.stringify([...store.completed]));
+}
+
+function totalScore() {
+  return games.reduce((sum, game) => sum + Math.max(0, Number(store.best[game.id] || 0)), 0);
 }
 
 function img(path) {
@@ -189,7 +193,7 @@ function updateHud() {
     ["время", Math.ceil(app.time)],
     ["комбо", app.combo],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
-  totalScoreEl.textContent = store.total;
+  totalScoreEl.textContent = totalScore();
 }
 
 function showOverlay(title, text) {
@@ -204,12 +208,15 @@ function hideOverlay() {
 
 function finish(message) {
   app.running = false;
-  store.total += Math.max(0, Math.round(app.score));
+  const roundScore = Math.max(0, Math.round(app.score));
+  if (app.activeId) {
+    store.best[app.activeId] = Math.max(Number(store.best[app.activeId] || 0), roundScore);
+  }
   if (app.activeId) store.completed.add(app.activeId);
   saveProgress();
   updateHud();
   renderMenu();
-  showOverlay(message, `Раунд окончен. Получено очков: ${Math.max(0, Math.round(app.score))}.`);
+  showOverlay(message, `Раунд окончен. Очки за попытку: ${roundScore}. Общий счет складывается из лучших результатов.`);
 }
 
 function startGame(id) {
@@ -259,7 +266,7 @@ function showMenu() {
 
 function renderMenu() {
   gameMenu.innerHTML = games.map((game) => {
-    const done = store.completed.has(game.id) ? " + пройдено" : "";
+    const done = store.completed.has(game.id) ? "" : "";
     const active = game.id === app.activeId ? " is-active" : "";
     return `
       <button class="game-card${active}" style="--accent:${game.accent}" data-game="${game.id}">
@@ -329,11 +336,11 @@ function makeAttractGame() {
       drawPanel(90, 82, 780, 360, "rgba(9, 8, 20, 0.84)");
       drawText("ДР-АРКАДА", W / 2, 118, 54, "#ffd84a", "center");
       drawText("Выбери картридж слева", W / 2, 190, 25, "#fff6d7", "center");
-      drawText("тач / мышь / стрелки работают", W / 2, 228, 21, "#c9c0df", "center");
-      const lenya = sprite("lenya_pose", Math.floor(t * 1.7) % 2 ? 11 : 1);
-      const eva = sprite("eva", Math.floor(t * 1.4) % 2 ? 20 : 2);
-      drawImageFit(lenya, 285, 250, 150, 150, "bottom");
-      drawImageFit(eva, 520, 250, 150, 150, "bottom");
+      const frame = Math.floor(t);
+      const lenya = sprite("lenya_pose", frame % 12);
+      const eva = sprite("eva", frame % 8);
+      drawImageFit(lenya, 360, 250, 145, 150, "bottom");
+      drawImageFit(eva, 470, 250, 145, 150, "bottom");
     },
   };
 }
@@ -925,7 +932,7 @@ async function loadAssets() {
 }
 
 async function init() {
-  totalScoreEl.textContent = store.total;
+  totalScoreEl.textContent = totalScore();
   renderMenu();
   showOverlay("Загрузка", "Готовим спрайты и мини-игры.");
   await loadAssets();

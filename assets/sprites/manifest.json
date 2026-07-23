@@ -200,11 +200,7 @@
       "w": 146,
       "h": 368
     },
-    {
-      "file": "assets/sprites/eva/eva-08.png",
-      "w": 38,
-      "h": 43
-    },
+    null,
     {
       "file": "assets/sprites/eva/eva-09.png",
       "w": 206,
@@ -264,16 +260,6 @@
       "file": "assets/sprites/eva/eva-20.png",
       "w": 241,
       "h": 212
-    },
-    {
-      "file": "assets/sprites/eva/eva-21.png",
-      "w": 42,
-      "h": 44
-    },
-    {
-      "file": "assets/sprites/eva/eva-22.png",
-      "w": 38,
-      "h": 45
     }
   ],
   "objects": [
@@ -459,7 +445,7 @@
     },
     {
       "file": "assets/sprites/objects/objects-36.png",
-      "w": 231,
+      "w": 117,
       "h": 109
     },
     {
