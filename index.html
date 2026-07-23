@@ -2,80 +2,60 @@
 <html lang="ru">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>ДР-Аркада Ленчика</title>
-    <meta name="description" content="Пиксельная аркада ко дню рождения Ленчика: мини-игры про школу, стройку, греблю, гонки и друзей.">
+    <meta name="description" content="Пиксельная мини-аркада ко дню рождения Ленчика.">
     <meta property="og:title" content="ДР-Аркада Ленчика">
-    <meta property="og:description" content="Сыграй в восемь мини-игр про Ленчика и открой поздравление.">
+    <meta property="og:description" content="Набор коротких пиксельных игр для Ленчика.">
     <meta property="og:type" content="website">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23090812'/%3E%3Crect x='3' y='3' width='10' height='10' fill='%23ffe45c'/%3E%3Crect x='5' y='6' width='2' height='2' fill='%23090812'/%3E%3Crect x='9' y='6' width='2' height='2' fill='%23090812'/%3E%3Crect x='5' y='10' width='6' height='1' fill='%23090812'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <!--
-      THESIS: a birthday greeting becomes a playable retro arcade cabinet, not a card.
-      OWN-WORLD: black-violet cabinet, yellow birthday pixels, saturated arcade roles, cartridge navigation.
-      STORY: friends pick inside-joke games, score points, unlock a birthday screen.
-      FIRST VIEWPORT: title and live character stage left, cartridge grid right, cabinet HUD below.
-      FORM: greenfield Experience surface, arcade menu structure, static GitHub Pages build.
-    -->
-    <div class="crt" aria-hidden="true"></div>
-    <main class="app-shell">
-      <section class="hero-panel" aria-labelledby="page-title">
-        <div class="hero-copy">
-          <p class="kicker">8-BIT BIRTHDAY QUEST</p>
-          <h1 id="page-title">ДР-Аркада Ленчика</h1>
-          <p class="hero-text">Картридж с мини-играми про школу, стройку, греблю, Формулу 1, CS и легендарный вопрос про рюкзак.</p>
-          <div class="hero-actions">
-            <button class="pixel-button primary" data-start-random>Случайная игра</button>
-            <button class="pixel-button" data-open-final>Финал</button>
-          </div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="kicker">8-BIT PARTY</p>
+          <h1>ДР-Аркада Ленчика</h1>
         </div>
-        <div class="character-stage" aria-label="Пиксельный Ленчик">
-          <canvas id="heroSprite" width="240" height="240"></canvas>
-          <div class="speech-bubble" id="speechBubble">ребят, а вы не видели мой рюкзак?</div>
+        <div class="scorebox">
+          <span>общий счет</span>
+          <strong id="totalScore">0</strong>
         </div>
-      </section>
+      </header>
 
-      <section class="arcade-layout">
-        <nav class="cartridge-grid" id="gameGrid" aria-label="Выбор мини-игры"></nav>
-        <section class="machine" aria-live="polite">
-          <div class="machine-top">
+      <section class="cabinet" aria-label="Игровой автомат">
+        <aside class="menu">
+          <div class="menu-head">
+            <span>игры</span>
+            <button id="randomBtn" type="button">случайная</button>
+          </div>
+          <nav id="gameMenu" class="game-menu" aria-label="Выбор игры"></nav>
+        </aside>
+
+        <section class="stage-wrap">
+          <div class="stage-head">
             <div>
-              <p class="screen-label">NOW PLAYING</p>
-              <h2 id="gameTitle">Выбери картридж</h2>
+              <p id="gameKind" class="kicker">READY</p>
+              <h2 id="gameTitle">Выбери игру</h2>
             </div>
-            <div class="global-score">
-              <span>Общий счет</span>
-              <strong id="totalScore">0</strong>
-            </div>
+            <div id="hud" class="hud"></div>
           </div>
-          <div class="hud" id="hud"></div>
-          <div class="screen" id="gameScreen">
-            <div class="attract">
-              <canvas id="attractSprite" width="220" height="220"></canvas>
-              <p>Выбери игру справа или нажми случайный картридж. После нескольких побед откроется праздничный финал.</p>
-            </div>
+
+          <div class="canvas-frame">
+            <canvas id="gameCanvas" width="960" height="540" aria-label="Игровой экран"></canvas>
+            <div id="overlay" class="overlay"></div>
           </div>
-          <div class="machine-controls">
-            <button class="pixel-button" id="restartBtn">Рестарт</button>
-            <button class="pixel-button" id="menuBtn">Меню</button>
+
+          <div class="controls">
+            <button id="startBtn" type="button">старт</button>
+            <button id="restartBtn" type="button">заново</button>
+            <button id="menuBtn" type="button">меню</button>
           </div>
         </section>
       </section>
-
-      <section class="final-panel" id="finalPanel" hidden>
-        <div class="final-card">
-          <p class="kicker">SECRET ENDING</p>
-          <h2>Ленчик, с днем рождения!</h2>
-          <p>Пусть рюкзак всегда находится, башни стоят ровно, болид не заносит, лодка летит, а тиммейты дают инфу вовремя.</p>
-          <div class="final-sprites">
-            <canvas id="finalLenya" width="160" height="160"></canvas>
-            <canvas id="finalEva" width="160" height="160"></canvas>
-          </div>
-        </div>
-      </section>
     </main>
+
     <script src="game.js"></script>
   </body>
 </html>

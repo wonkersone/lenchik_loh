@@ -6,7 +6,7 @@ Lenchik Birthday Arcade is a playful static birthday website for Lenya, made by 
 
 ## Audience
 
-The primary audience is Lenya and close friends who know the shared jokes: school days, the missing backpack, rowing, Formula 1, Counter-Strike, Moscow construction studies, and Eva.
+The primary audience is Lenya and close friends who know the shared jokes: school days, the missing backpack, rowing, Formula 1, Moscow construction studies, Eva, and the birthday context.
 
 ## Experience
 
@@ -14,14 +14,13 @@ Visitors land in a pixel arcade menu, choose mini-games, earn points, and eventu
 
 ## Required Games
 
-- Hit Lenchik: whack-a-mole parody. Hit Lenya, avoid Eva with cake.
+- Don't Hit Eva: whack-a-mole parody. Hit Lenya, avoid Eva with cake.
 - Backpack Search: hidden-object school corridor game.
 - Build Lenchik Tower: catch construction materials and avoid bad blueprints.
 - Formula Lenya: top-down racing lane game.
 - Row Lenchik Row: rhythm rowing challenge.
-- Counter-Lenchik: aim trainer against harmless target objects.
 - Match Lenchik: match-3 with Lenya-themed face tokens.
-- Last Desk Escape: school maze inspired by Pac-Man.
+- Textbook Tower: timing game about stacking school things.
 
 ## Characters
 
@@ -35,3 +34,4 @@ Lenya is a slim young man with short dark hair, thick eyebrows, expressive eyes,
 - Pixel-art style.
 - Russian copy.
 - Games must be playable, not just mockups.
+- The active version has seven games. Removed ideas should not appear in the UI.

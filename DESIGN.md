@@ -32,7 +32,7 @@ Use browser-safe stacks with pixel rendering. Main display and buttons use `"Cou
 - HUD strips with score, timer, combo, best
 - Chunky 4px borders and hard pixel shadows
 - Buttons with immediate press feedback
-- Pixel avatars drawn as canvas/SVG/CSS sprites
+- Pixel avatars and props from transparent PNG sprite assets
 
 ## Motion
 

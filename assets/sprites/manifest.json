@@ -1,0 +1,766 @@
+{
+  "lenya_pose": [
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-00.png",
+      "w": 224,
+      "h": 441
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-01.png",
+      "w": 163,
+      "h": 399
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-02.png",
+      "w": 162,
+      "h": 399
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-03.png",
+      "w": 230,
+      "h": 396
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-04.png",
+      "w": 256,
+      "h": 439
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-05.png",
+      "w": 178,
+      "h": 397
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-06.png",
+      "w": 224,
+      "h": 400
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-07.png",
+      "w": 256,
+      "h": 397
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-08.png",
+      "w": 218,
+      "h": 402
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-09.png",
+      "w": 256,
+      "h": 404
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-10.png",
+      "w": 256,
+      "h": 404
+    },
+    {
+      "file": "assets/sprites/lenya_pose/lenya_pose-11.png",
+      "w": 157,
+      "h": 406
+    }
+  ],
+  "lenya_face": [
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-00.png",
+      "w": 198,
+      "h": 243
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-01.png",
+      "w": 249,
+      "h": 243
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-02.png",
+      "w": 204,
+      "h": 243
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-03.png",
+      "w": 206,
+      "h": 243
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-04.png",
+      "w": 256,
+      "h": 243
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-05.png",
+      "w": 190,
+      "h": 243
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-06.png",
+      "w": 201,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-07.png",
+      "w": 249,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-08.png",
+      "w": 208,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-09.png",
+      "w": 206,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-10.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-11.png",
+      "w": 190,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-12.png",
+      "w": 202,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-13.png",
+      "w": 248,
+      "h": 255
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-14.png",
+      "w": 223,
+      "h": 255
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-15.png",
+      "w": 251,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-16.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-17.png",
+      "w": 191,
+      "h": 252
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-18.png",
+      "w": 204,
+      "h": 237
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-19.png",
+      "w": 242,
+      "h": 237
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-20.png",
+      "w": 226,
+      "h": 237
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-21.png",
+      "w": 254,
+      "h": 237
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-22.png",
+      "w": 256,
+      "h": 237
+    },
+    {
+      "file": "assets/sprites/lenya_face/lenya_face-23.png",
+      "w": 190,
+      "h": 237
+    }
+  ],
+  "eva": [
+    {
+      "file": "assets/sprites/eva/eva-00.png",
+      "w": 252,
+      "h": 264
+    },
+    {
+      "file": "assets/sprites/eva/eva-01.png",
+      "w": 256,
+      "h": 264
+    },
+    {
+      "file": "assets/sprites/eva/eva-02.png",
+      "w": 256,
+      "h": 267
+    },
+    {
+      "file": "assets/sprites/eva/eva-03.png",
+      "w": 256,
+      "h": 246
+    },
+    {
+      "file": "assets/sprites/eva/eva-04.png",
+      "w": 254,
+      "h": 239
+    },
+    {
+      "file": "assets/sprites/eva/eva-05.png",
+      "w": 252,
+      "h": 267
+    },
+    {
+      "file": "assets/sprites/eva/eva-06.png",
+      "w": 241,
+      "h": 341
+    },
+    {
+      "file": "assets/sprites/eva/eva-07.png",
+      "w": 256,
+      "h": 341
+    },
+    {
+      "file": "assets/sprites/eva/eva-08.png",
+      "w": 256,
+      "h": 341
+    },
+    {
+      "file": "assets/sprites/eva/eva-09.png",
+      "w": 256,
+      "h": 341
+    },
+    {
+      "file": "assets/sprites/eva/eva-10.png",
+      "w": 256,
+      "h": 341
+    },
+    {
+      "file": "assets/sprites/eva/eva-11.png",
+      "w": 234,
+      "h": 341
+    },
+    {
+      "file": "assets/sprites/eva/eva-12.png",
+      "w": 200,
+      "h": 268
+    },
+    {
+      "file": "assets/sprites/eva/eva-13.png",
+      "w": 256,
+      "h": 268
+    },
+    {
+      "file": "assets/sprites/eva/eva-14.png",
+      "w": 249,
+      "h": 268
+    },
+    {
+      "file": "assets/sprites/eva/eva-15.png",
+      "w": 256,
+      "h": 268
+    },
+    {
+      "file": "assets/sprites/eva/eva-16.png",
+      "w": 256,
+      "h": 268
+    },
+    {
+      "file": "assets/sprites/eva/eva-17.png",
+      "w": 187,
+      "h": 268
+    }
+  ],
+  "objects": [
+    {
+      "file": "assets/sprites/objects/objects-00.png",
+      "w": 222,
+      "h": 253
+    },
+    {
+      "file": "assets/sprites/objects/objects-01.png",
+      "w": 233,
+      "h": 251
+    },
+    {
+      "file": "assets/sprites/objects/objects-02.png",
+      "w": 233,
+      "h": 253
+    },
+    {
+      "file": "assets/sprites/objects/objects-03.png",
+      "w": 233,
+      "h": 252
+    },
+    {
+      "file": "assets/sprites/objects/objects-04.png",
+      "w": 233,
+      "h": 241
+    },
+    {
+      "file": "assets/sprites/objects/objects-05.png",
+      "w": 210,
+      "h": 241
+    },
+    {
+      "file": "assets/sprites/objects/objects-06.png",
+      "w": 216,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-07.png",
+      "w": 233,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-08.png",
+      "w": 233,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-09.png",
+      "w": 233,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-10.png",
+      "w": 233,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-11.png",
+      "w": 216,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-12.png",
+      "w": 214,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-13.png",
+      "w": 233,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-14.png",
+      "w": 233,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-15.png",
+      "w": 233,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-16.png",
+      "w": 233,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-17.png",
+      "w": 215,
+      "h": 280
+    },
+    {
+      "file": "assets/sprites/objects/objects-18.png",
+      "w": 215,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/objects/objects-19.png",
+      "w": 233,
+      "h": 248
+    },
+    {
+      "file": "assets/sprites/objects/objects-20.png",
+      "w": 233,
+      "h": 261
+    },
+    {
+      "file": "assets/sprites/objects/objects-21.png",
+      "w": 233,
+      "h": 254
+    },
+    {
+      "file": "assets/sprites/objects/objects-22.png",
+      "w": 233,
+      "h": 261
+    },
+    {
+      "file": "assets/sprites/objects/objects-23.png",
+      "w": 218,
+      "h": 248
+    }
+  ],
+  "construction": [
+    {
+      "file": "assets/sprites/construction/construction-00.png",
+      "w": 238,
+      "h": 229
+    },
+    {
+      "file": "assets/sprites/construction/construction-01.png",
+      "w": 256,
+      "h": 245
+    },
+    {
+      "file": "assets/sprites/construction/construction-02.png",
+      "w": 256,
+      "h": 239
+    },
+    {
+      "file": "assets/sprites/construction/construction-03.png",
+      "w": 256,
+      "h": 239
+    },
+    {
+      "file": "assets/sprites/construction/construction-04.png",
+      "w": 256,
+      "h": 218
+    },
+    {
+      "file": "assets/sprites/construction/construction-05.png",
+      "w": 199,
+      "h": 244
+    },
+    {
+      "file": "assets/sprites/construction/construction-06.png",
+      "w": 241,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-07.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-08.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-09.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-10.png",
+      "w": 256,
+      "h": 243
+    },
+    {
+      "file": "assets/sprites/construction/construction-11.png",
+      "w": 222,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-12.png",
+      "w": 242,
+      "h": 255
+    },
+    {
+      "file": "assets/sprites/construction/construction-13.png",
+      "w": 256,
+      "h": 254
+    },
+    {
+      "file": "assets/sprites/construction/construction-14.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-15.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-16.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-17.png",
+      "w": 224,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/construction/construction-18.png",
+      "w": 236,
+      "h": 187
+    },
+    {
+      "file": "assets/sprites/construction/construction-19.png",
+      "w": 256,
+      "h": 220
+    },
+    {
+      "file": "assets/sprites/construction/construction-20.png",
+      "w": 256,
+      "h": 226
+    },
+    {
+      "file": "assets/sprites/construction/construction-21.png",
+      "w": 256,
+      "h": 226
+    },
+    {
+      "file": "assets/sprites/construction/construction-22.png",
+      "w": 256,
+      "h": 230
+    },
+    {
+      "file": "assets/sprites/construction/construction-23.png",
+      "w": 227,
+      "h": 225
+    }
+  ],
+  "racing": [
+    {
+      "file": "assets/sprites/racing/racing-00.png",
+      "w": 227,
+      "h": 206
+    },
+    {
+      "file": "assets/sprites/racing/racing-01.png",
+      "w": 256,
+      "h": 209
+    },
+    {
+      "file": "assets/sprites/racing/racing-02.png",
+      "w": 256,
+      "h": 196
+    },
+    {
+      "file": "assets/sprites/racing/racing-03.png",
+      "w": 256,
+      "h": 202
+    },
+    {
+      "file": "assets/sprites/racing/racing-04.png",
+      "w": 256,
+      "h": 208
+    },
+    {
+      "file": "assets/sprites/racing/racing-05.png",
+      "w": 209,
+      "h": 209
+    },
+    {
+      "file": "assets/sprites/racing/racing-06.png",
+      "w": 244,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-07.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-08.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-09.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-10.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-11.png",
+      "w": 219,
+      "h": 231
+    },
+    {
+      "file": "assets/sprites/racing/racing-12.png",
+      "w": 225,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-13.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-14.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-15.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-16.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-17.png",
+      "w": 233,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/racing/racing-18.png",
+      "w": 235,
+      "h": 218
+    },
+    {
+      "file": "assets/sprites/racing/racing-19.png",
+      "w": 256,
+      "h": 218
+    },
+    {
+      "file": "assets/sprites/racing/racing-20.png",
+      "w": 238,
+      "h": 218
+    },
+    {
+      "file": "assets/sprites/racing/racing-21.png",
+      "w": 233,
+      "h": 218
+    },
+    {
+      "file": "assets/sprites/racing/racing-22.png",
+      "w": 256,
+      "h": 218
+    },
+    {
+      "file": "assets/sprites/racing/racing-23.png",
+      "w": 234,
+      "h": 218
+    }
+  ],
+  "ui": [
+    {
+      "file": "assets/sprites/ui/ui-00.png",
+      "w": 198,
+      "h": 214
+    },
+    {
+      "file": "assets/sprites/ui/ui-01.png",
+      "w": 256,
+      "h": 214
+    },
+    {
+      "file": "assets/sprites/ui/ui-02.png",
+      "w": 256,
+      "h": 235
+    },
+    {
+      "file": "assets/sprites/ui/ui-03.png",
+      "w": 256,
+      "h": 235
+    },
+    {
+      "file": "assets/sprites/ui/ui-04.png",
+      "w": 256,
+      "h": 235
+    },
+    {
+      "file": "assets/sprites/ui/ui-05.png",
+      "w": 187,
+      "h": 235
+    },
+    {
+      "file": "assets/sprites/ui/ui-06.png",
+      "w": 208,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/ui/ui-07.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/ui/ui-08.png",
+      "w": 256,
+      "h": 256
+    },
+    {
+      "file": "assets/sprites/ui/ui-09.png",
+      "w": 256,
+      "h": 248
+    },
+    {
+      "file": "assets/sprites/ui/ui-10.png",
+      "w": 256,
+      "h": 235
+    },
+    {
+      "file": "assets/sprites/ui/ui-11.png",
+      "w": 187,
+      "h": 235
+    },
+    {
+      "file": "assets/sprites/ui/ui-12.png",
+      "w": 208,
+      "h": 237
+    },
+    {
+      "file": "assets/sprites/ui/ui-13.png",
+      "w": 256,
+      "h": 237
+    },
+    {
+      "file": "assets/sprites/ui/ui-14.png",
+      "w": 256,
+      "h": 247
+    },
+    {
+      "file": "assets/sprites/ui/ui-15.png",
+      "w": 255,
+      "h": 236
+    },
+    {
+      "file": "assets/sprites/ui/ui-16.png",
+      "w": 254,
+      "h": 239
+    },
+    {
+      "file": "assets/sprites/ui/ui-17.png",
+      "w": 203,
+      "h": 249
+    },
+    {
+      "file": "assets/sprites/ui/ui-18.png",
+      "w": 203,
+      "h": 204
+    },
+    {
+      "file": "assets/sprites/ui/ui-19.png",
+      "w": 256,
+      "h": 204
+    },
+    {
+      "file": "assets/sprites/ui/ui-20.png",
+      "w": 237,
+      "h": 205
+    },
+    {
+      "file": "assets/sprites/ui/ui-21.png",
+      "w": 256,
+      "h": 195
+    },
+    {
+      "file": "assets/sprites/ui/ui-22.png",
+      "w": 256,
+      "h": 178
+    },
+    {
+      "file": "assets/sprites/ui/ui-23.png",
+      "w": 191,
+      "h": 179
+    }
+  ]
+}
