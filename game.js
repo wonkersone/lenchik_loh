@@ -43,7 +43,7 @@ const bgRects = {
 const games = [
   {
     id: "search",
-    title: "Где рюкзак?",
+    title: "Ребят, а вы не видели мой рюкзак?",
     kind: "внимательность",
     desc: "Найди нужную вещь среди школьного хаоса.",
     accent: "#43b6ff",
@@ -54,14 +54,14 @@ const games = [
     id: "whack",
     title: "Не бей Еву",
     kind: "реакция",
-    desc: "Леню бей, Еву с тортом не трогай.",
+    desc: "Бей Лёню, Еву с тортиком не трогай.",
     accent: "#ff4f78",
     icon: "lenya_face/lenya_face-05.png",
     make: makeWhackGame,
   },
   {
     id: "build",
-    title: "Стройка Лени",
+    title: "Строитель МГСУ",
     kind: "ловкость",
     desc: "Лови материалы и собирай этажи.",
     accent: "#ff9f43",
