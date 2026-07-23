@@ -64,123 +64,99 @@
   "lenya_face": [
     {
       "file": "assets/sprites/lenya_face/lenya_face-00.png",
-      "w": 198,
-      "h": 243
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-01.png",
-      "w": 249,
-      "h": 243
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-02.png",
-      "w": 204,
-      "h": 243
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-03.png",
-      "w": 206,
-      "h": 243
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-04.png",
-      "w": 256,
-      "h": 243
+      "w": 250,
+      "h": 260
     },
-    {
-      "file": "assets/sprites/lenya_face/lenya_face-05.png",
-      "w": 190,
-      "h": 243
-    },
-    {
-      "file": "assets/sprites/lenya_face/lenya_face-06.png",
-      "w": 201,
-      "h": 256
-    },
+    null,
+    null,
     {
       "file": "assets/sprites/lenya_face/lenya_face-07.png",
-      "w": 249,
-      "h": 256
+      "w": 250,
+      "h": 260
     },
-    {
-      "file": "assets/sprites/lenya_face/lenya_face-08.png",
-      "w": 208,
-      "h": 256
-    },
+    null,
     {
       "file": "assets/sprites/lenya_face/lenya_face-09.png",
-      "w": 206,
-      "h": 256
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-10.png",
-      "w": 256,
-      "h": 256
+      "w": 250,
+      "h": 260
     },
-    {
-      "file": "assets/sprites/lenya_face/lenya_face-11.png",
-      "w": 190,
-      "h": 256
-    },
+    null,
     {
       "file": "assets/sprites/lenya_face/lenya_face-12.png",
-      "w": 202,
-      "h": 256
+      "w": 250,
+      "h": 260
     },
-    {
-      "file": "assets/sprites/lenya_face/lenya_face-13.png",
-      "w": 248,
-      "h": 255
-    },
+    null,
     {
       "file": "assets/sprites/lenya_face/lenya_face-14.png",
-      "w": 223,
-      "h": 255
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-15.png",
-      "w": 251,
-      "h": 256
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-16.png",
-      "w": 256,
-      "h": 256
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-17.png",
-      "w": 191,
-      "h": 252
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-18.png",
-      "w": 204,
-      "h": 237
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-19.png",
-      "w": 242,
-      "h": 237
+      "w": 250,
+      "h": 260
     },
-    {
-      "file": "assets/sprites/lenya_face/lenya_face-20.png",
-      "w": 226,
-      "h": 237
-    },
+    null,
     {
       "file": "assets/sprites/lenya_face/lenya_face-21.png",
-      "w": 254,
-      "h": 237
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-22.png",
-      "w": 256,
-      "h": 237
+      "w": 250,
+      "h": 260
     },
     {
       "file": "assets/sprites/lenya_face/lenya_face-23.png",
-      "w": 190,
-      "h": 237
+      "w": 250,
+      "h": 260
     }
   ],
   "eva": [

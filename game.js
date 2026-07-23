@@ -47,7 +47,7 @@ const games = [
     kind: "внимательность",
     desc: "Найди нужную вещь среди школьного хаоса.",
     accent: "#43b6ff",
-    icon: "objects/objects-00.png",
+    icon: "lenya_face/lenya_face-23.png",
     make: makeSearchGame,
   },
   {
@@ -56,7 +56,7 @@ const games = [
     kind: "реакция",
     desc: "Бей Лёню, Еву с тортиком не трогай.",
     accent: "#ff4f78",
-    icon: "lenya_face/lenya_face-05.png",
+    icon: "lenya_face/lenya_face-04.png",
     make: makeWhackGame,
   },
   {
@@ -70,11 +70,11 @@ const games = [
   },
   {
     id: "race",
-    title: "Формула Леня",
+    title: "Октаха ехать, Мерседес сосать",
     kind: "гонка",
-    desc: "Меняй полосу, объезжай конусы.",
+    desc: "Шашки 40",
     accent: "#ffd84a",
-    icon: "lenya_pose/lenya_pose-05.png",
+    icon: "lenya_face/lenya_face-17.png",
     make: makeRaceGame,
   },
   {
@@ -83,16 +83,16 @@ const games = [
     kind: "ритм",
     desc: "Жми левый и правый борт в такт.",
     accent: "#54e6a5",
-    icon: "lenya_pose/lenya_pose-06.png",
+    icon: "lenya_face/lenya_face-21.png",
     make: makeRowGame,
   },
   {
     id: "match",
-    title: "Матч эмоций",
+    title: "3 в ряд с Иванычем",
     kind: "головоломка",
     desc: "Собирай одинаковые лица в ряд.",
     accent: "#f865b0",
-    icon: "lenya_face/lenya_face-02.png",
+    icon: "lenya_face/lenya_face-04.png",
     make: makeMatchGame,
   },
   {
@@ -101,7 +101,7 @@ const games = [
     kind: "тайминг",
     desc: "Роняй книги ровно, не завали башню.",
     accent: "#9b7cff",
-    icon: "objects/objects-03.png",
+    icon: "lenya_face/lenya_face-19.png",
     make: makeTowerGame,
   },
 ];
@@ -414,7 +414,7 @@ function makeSearchGame() {
 function makeWhackGame() {
   app.time = 32;
   const holes = [];
-  const faces = [2, 4, 5, 12, 15, 17, 21, 23];
+  const faces = [2, 4, 7, 12, 15, 17, 21, 23];
   for (let y = 0; y < 3; y += 1) {
     for (let x = 0; x < 3; x += 1) {
       holes.push({ x: 230 + x * 250, y: 110 + y * 132, r: 48, up: 0, kind: "none", face: 0 });
@@ -726,7 +726,7 @@ function makeRowGame() {
 
 function makeMatchGame() {
   app.time = 45;
-  const faces = [1, 2, 4, 5, 12, 16];
+  const faces = [1, 2, 4, 7, 12, 16];
   const size = 6;
   const boardX = 264;
   const boardY = 72;
@@ -907,13 +907,13 @@ async function loadAssets() {
   const paths = ["assets/backgrounds/game-backgrounds.png"];
   Object.entries(manifest).forEach(([group, items]) => {
     app.sprites[group] = items;
-    items.forEach((item) => paths.push(item.file));
+    items.filter(Boolean).forEach((item) => paths.push(item.file));
   });
   await Promise.all(paths.map((path) => new Promise((resolve) => {
     const image = new Image();
     image.onload = () => {
       app.images[path] = image;
-      Object.values(app.sprites).flat().forEach((item) => {
+      Object.values(app.sprites).flat().filter(Boolean).forEach((item) => {
         if (item.file === path) item.img = image;
       });
       resolve();
