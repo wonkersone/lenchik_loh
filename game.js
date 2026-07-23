@@ -331,7 +331,7 @@ function makeAttractGame() {
       drawText("Выбери картридж слева", W / 2, 190, 25, "#fff6d7", "center");
       drawText("тач / мышь / стрелки работают", W / 2, 228, 21, "#c9c0df", "center");
       const lenya = sprite("lenya_pose", Math.floor(t * 1.7) % 2 ? 11 : 1);
-      const eva = sprite("eva", Math.floor(t * 1.4) % 2 ? 5 : 0);
+      const eva = sprite("eva", Math.floor(t * 1.4) % 2 ? 20 : 2);
       drawImageFit(lenya, 285, 250, 150, 150, "bottom");
       drawImageFit(eva, 520, 250, 150, 150, "bottom");
     },
@@ -344,7 +344,7 @@ function makeSearchGame() {
   let target = null;
   let decoys = [];
   let pulse = 0;
-  const objectIds = [0, 1, 2, 3, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 18, 19, 21, 22, 23];
+  const objectIds = [0, 1, 2, 3, 4, 5, 10, 12, 13, 14, 15, 16, 17, 18, 20, 21, 23, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 38, 39, 44, 45, 46, 47, 48, 49, 52, 53, 55, 57, 59, 60, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79];
 
   function newRound() {
     decoys = Array.from({ length: 56 + round * 4 }, () => ({
@@ -357,7 +357,7 @@ function makeSearchGame() {
       alpha: rand(0.62, 0.92),
     }));
     target = {
-      img: sprite("objects", round % 2 ? 0 : 3),
+      img: sprite("objects", round % 2 ? 0 : 18),
       x: rand(70, W - 130),
       y: rand(128, H - 112),
       w: round % 2 ? 68 : 62,
@@ -468,7 +468,7 @@ function makeWhackGame() {
         ctx.stroke();
         if (hole.up > 0) {
           const lift = hole.up * 58;
-          const image = hole.kind === "eva" ? sprite("eva", 0) : sprite("lenya_face", hole.face);
+          const image = hole.kind === "eva" ? sprite("eva", 2) : sprite("lenya_face", hole.face);
           drawImageFit(image, hole.x - 58, hole.y - 62 - lift, 116, 116);
           if (hole.kind === "eva") {
             drawText("не бей", hole.x, hole.y + 20, 16, "#ff4f78", "center");
@@ -485,8 +485,8 @@ function makeBuildGame() {
   const fallers = [];
   const tower = [];
   let spawn = 0;
-  const good = [0, 1, 2, 4, 6, 7, 8, 9, 12, 13];
-  const bad = [16, 18, 19, 20, 23];
+  const good = [0, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 17, 20, 21, 22, 23, 28, 29, 39, 40, 41, 42, 45, 48, 49, 51, 52, 53, 55, 73, 74, 75, 76, 77, 79];
+  const bad = [43, 44, 56, 57, 60, 61, 62, 65, 67, 68, 69, 70, 71];
 
   function addFaller() {
     const isBad = Math.random() < 0.24;
@@ -549,7 +549,7 @@ function makeBuildGame() {
         ctx.strokeRect(baseX + (i % 3) * 3, y, 142, 17);
       }
       fallers.forEach((f) => drawImageFit(f.img, f.x - f.size / 2, f.y - f.size / 2, f.size, f.size));
-      drawImageFit(sprite("lenya_pose", 4), playerX - 56, H - 150, 112, 132, "bottom");
+      drawImageFit(sprite("lenya_pose", 2), playerX - 56, H - 150, 112, 132, "bottom");
     },
   };
 }
@@ -573,7 +573,7 @@ function makeRaceGame() {
       lane: Math.floor(Math.random() * 3),
       y: -70,
       collect,
-      img: sprite("racing", collect ? choice([18, 19, 20, 21]) : choice([6, 7, 8, 9, 12])),
+      img: sprite("racing", collect ? choice([16, 26]) : choice([17, 18, 19, 20, 24, 27, 28, 29, 31, 34, 35])),
     });
   }
 
@@ -639,7 +639,7 @@ function makeRaceGame() {
         ctx.fillRect(480 + width / 6, y, 8, 58);
       }
       objects.forEach((obj) => drawImageFit(obj.img, lanes[obj.lane] - 34, obj.y, 68, 68));
-      drawImageFit(sprite("racing", 0), lanes[lane] - 50, H - 132, 100, 108, "bottom");
+      drawImageFit(sprite("racing", 21), lanes[lane] - 52, H - 132, 104, 108, "bottom");
       drawText(`${Math.floor(distance / 100)} м`, 36, 34, 28, "#ffd84a");
       drawText("тап слева / справа", W - 36, 34, 20, "#fff6d7", "right");
     },
@@ -872,7 +872,7 @@ function makeTowerGame() {
       drawBg("school");
       drawPanel(26, 24, 330, 56, "rgba(13,11,25,0.84)");
       drawText(`этажи: ${stack.length - 1}`, 46, 40, 24, "#ffd84a");
-      drawImageFit(sprite("lenya_pose", 2), 760, 338, 118, 156, "bottom");
+      drawImageFit(sprite("lenya_pose", 3), 760, 338, 118, 156, "bottom");
       const hookX = W / 2 + Math.sin(swing) * 280;
       ctx.strokeStyle = "#fff6d7";
       ctx.lineWidth = 4;
@@ -881,7 +881,7 @@ function makeTowerGame() {
       ctx.lineTo(hookX, 70);
       ctx.stroke();
       if (!falling) {
-        drawImageFit(sprite("objects", 3), hookX - 42, 70, 84, 54);
+        drawImageFit(sprite("objects", 18), hookX - 42, 70, 84, 54);
       }
       stack.forEach((block, i) => {
         if (i === 0) {
@@ -889,13 +889,13 @@ function makeTowerGame() {
           ctx.fillRect(block.x - block.w / 2, block.y, block.w, 22);
           return;
         }
-        drawImageFit(sprite("objects", i % 2 ? 3 : 2), block.x - block.w / 2, block.y - 4, block.w, 34);
+        drawImageFit(sprite("objects", i % 2 ? 18 : 13), block.x - block.w / 2, block.y - 4, block.w, 34);
         ctx.strokeStyle = "#fff6d7";
         ctx.lineWidth = 2;
         ctx.strokeRect(block.x - block.w / 2, block.y, block.w, 22);
       });
       if (falling) {
-        drawImageFit(sprite("objects", stack.length % 2 ? 3 : 2), falling.x - falling.w / 2, falling.y - 12, falling.w, 42);
+        drawImageFit(sprite("objects", stack.length % 2 ? 18 : 13), falling.x - falling.w / 2, falling.y - 12, falling.w, 42);
       }
       drawText("тап / пробел чтобы бросить", W / 2, 500, 20, "#c9c0df", "center");
     },
@@ -906,6 +906,7 @@ async function loadAssets() {
   const manifest = await fetch("assets/sprites/manifest.json").then((r) => r.json());
   const paths = ["assets/backgrounds/game-backgrounds.png"];
   Object.entries(manifest).forEach(([group, items]) => {
+    if (group === "ui") return;
     app.sprites[group] = items;
     items.filter(Boolean).forEach((item) => paths.push(item.file));
   });
