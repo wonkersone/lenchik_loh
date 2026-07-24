@@ -1644,5 +1644,67 @@
       "w": 333,
       "h": 49
     }
+  ],
+  "building_layers": [
+    {
+      "file": "assets/sprites/building_layers/building-layer-00.png",
+      "w": 330,
+      "h": 176
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-01.png",
+      "w": 330,
+      "h": 178
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-02.png",
+      "w": 332,
+      "h": 178
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-03.png",
+      "w": 329,
+      "h": 179
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-04.png",
+      "w": 340,
+      "h": 178
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-05.png",
+      "w": 329,
+      "h": 175
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-06.png",
+      "w": 334,
+      "h": 175
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-07.png",
+      "w": 342,
+      "h": 176
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-08.png",
+      "w": 332,
+      "h": 180
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-09.png",
+      "w": 331,
+      "h": 176
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-10.png",
+      "w": 334,
+      "h": 175
+    },
+    {
+      "file": "assets/sprites/building_layers/building-layer-11.png",
+      "w": 341,
+      "h": 177
+    }
   ]
 }

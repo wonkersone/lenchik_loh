@@ -9,6 +9,8 @@ const gameMenu = document.querySelector("#gameMenu");
 const titleEl = document.querySelector("#gameTitle");
 const kindEl = document.querySelector("#gameKind");
 const totalScoreEl = document.querySelector("#totalScore");
+const restartBtn = document.querySelector("#restartBtn");
+const menuBtn = document.querySelector("#menuBtn");
 
 ctx.imageSmoothingEnabled = false;
 
@@ -190,6 +192,52 @@ function drawImageFit(image, x, y, w, h, anchor = "center") {
   ctx.drawImage(image, dx, dy, dw, dh);
 }
 
+function addTapFeedback(effects, x, y, text, color, kind = "ring") {
+  effects.push({ x, y, text, color, kind, t: 0.42, life: 0.42 });
+}
+
+function updateTapFeedback(effects, dt) {
+  for (let i = effects.length - 1; i >= 0; i -= 1) {
+    effects[i].t -= dt;
+    if (effects[i].t <= 0) effects.splice(i, 1);
+  }
+}
+
+function drawTapFeedback(effects) {
+  effects.forEach((effect) => {
+    const p = 1 - effect.t / effect.life;
+    const radius = 18 + p * 34;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - p);
+    ctx.strokeStyle = effect.color;
+    ctx.lineWidth = 5;
+    if (effect.kind === "cross") {
+      ctx.beginPath();
+      ctx.moveTo(effect.x - radius * 0.65, effect.y - radius * 0.65);
+      ctx.lineTo(effect.x + radius * 0.65, effect.y + radius * 0.65);
+      ctx.moveTo(effect.x + radius * 0.65, effect.y - radius * 0.65);
+      ctx.lineTo(effect.x - radius * 0.65, effect.y + radius * 0.65);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    drawText(effect.text, effect.x, effect.y - 54 - p * 18, 26, effect.color, "center");
+    ctx.restore();
+  });
+}
+
+function drawLayerBlock(block, x = block.x - block.w / 2, y = block.y, w = block.w, h = block.h) {
+  const image = sprite("building_layers", block.img);
+  if (!image) return;
+  const cropStart = block.cropStart || 0;
+  const cropWidth = block.cropWidth || 1;
+  const sx = Math.max(0, Math.floor(image.width * cropStart));
+  const sw = Math.max(1, Math.floor(image.width * cropWidth));
+  ctx.drawImage(image, sx, 0, Math.min(sw, image.width - sx), image.height, x, y, w, h);
+}
+
 function updateHud() {
   hud.innerHTML = [
     ["счет", app.score],
@@ -205,6 +253,7 @@ function showOverlay(title, text) {
 }
 
 function showGameIntro(meta) {
+  restartBtn.hidden = true;
   const imagePath = meta.introImage ? `assets/sprites/${meta.introImage}` : `assets/sprites/${meta.icon}`;
   overlay.classList.remove("is-hidden");
   overlay.innerHTML = `
@@ -251,6 +300,7 @@ function selectGame(id) {
   app.time = 0;
   app.metric = "";
   app.running = false;
+  restartBtn.hidden = true;
   app.game = makeGamePreview(meta);
   titleEl.textContent = meta.title;
   kindEl.textContent = meta.kind;
@@ -271,6 +321,7 @@ function beginGame(id) {
   app.time = 35;
   app.metric = "";
   app.running = true;
+  restartBtn.hidden = false;
   app.lastTime = performance.now();
   app.game = meta.make();
   titleEl.textContent = meta.title;
@@ -284,11 +335,16 @@ function beginGame(id) {
 }
 
 function restartGame() {
-  if (app.activeId) beginGame(app.activeId);
+  if (!app.activeId) return;
+  restartBtn.classList.remove("is-pulsing");
+  void restartBtn.offsetWidth;
+  restartBtn.classList.add("is-pulsing");
+  beginGame(app.activeId);
 }
 
 function showMenu() {
   app.running = false;
+  restartBtn.hidden = true;
   app.game = makeAttractGame();
   app.activeId = null;
   titleEl.textContent = "Выбери игру";
@@ -416,6 +472,7 @@ function makeSearchGame() {
   let target = null;
   let decoys = [];
   let missFlash = 0;
+  const effects = [];
   const backpackIds = [0, 1, 2, 3, 4, 5];
   const objectIds = app.sprites.objects
     .map((item, index) => item && !backpackIds.includes(index) ? index : null)
@@ -429,7 +486,7 @@ function makeSearchGame() {
       w: rand(34, 78),
       h: rand(30, 72),
       rot: rand(-0.18, 0.18),
-      alpha: rand(0.62, 0.92),
+      alpha: 1,
     }));
     target = {
       img: sprite("objects", choice(backpackIds)),
@@ -448,11 +505,13 @@ function makeSearchGame() {
     tap(p) {
       if (!app.running) return;
       if (rectHit(p, target)) {
+        addTapFeedback(effects, target.x + target.w / 2, target.y + target.h / 2, "нашел", "#54e6a5");
         app.score += 18 + round * 3 + app.combo * 2;
         app.combo += 1;
         round += 1;
         newRound();
       } else {
+        addTapFeedback(effects, p.x, p.y, "мимо", "#ff4f78", "cross");
         app.score = Math.max(0, app.score - 2);
         app.combo = 0;
         missFlash = 0.22;
@@ -460,6 +519,7 @@ function makeSearchGame() {
     },
     update(dt) {
       missFlash = Math.max(0, missFlash - dt);
+      updateTapFeedback(effects, dt);
     },
     draw() {
       drawBg("school");
@@ -467,7 +527,7 @@ function makeSearchGame() {
       drawText(`найди: ${target.label}`, 40, 34, 25, "#ffd84a");
       for (const item of decoys) {
         ctx.save();
-        ctx.globalAlpha = item === target ? 0.94 : item.alpha;
+        ctx.globalAlpha = 1;
         ctx.translate(item.x + item.w / 2, item.y + item.h / 2);
         ctx.rotate(item.rot);
         drawImageFit(item.img, -item.w / 2, -item.h / 2, item.w, item.h);
@@ -477,6 +537,7 @@ function makeSearchGame() {
         ctx.fillStyle = "rgba(255,79,120,0.22)";
         ctx.fillRect(0, 0, W, H);
       }
+      drawTapFeedback(effects);
     },
   };
 }
@@ -508,6 +569,7 @@ function makeWhackGame() {
   }
   let spawn = 0.7;
   let hammer = null;
+  const effects = [];
 
   function pop() {
     const candidates = holes.filter((hole) => hole.state === "hidden");
@@ -527,13 +589,16 @@ function makeWhackGame() {
       const hit = holes.find((hole) => hole.state === "up" && circleHit(p, { x: hole.x, y: hole.y - 44, r: 58 }));
       hammer = { x: p.x, y: p.y, t: 0.16 };
       if (!hit) {
+        addTapFeedback(effects, p.x, p.y, "мимо", "#ff4f78", "cross");
         app.combo = 0;
         return;
       }
       if (hit.kind === "eva") {
+        addTapFeedback(effects, hit.x, hit.y - 50, "ошибка", "#ff4f78", "cross");
         app.score = Math.max(0, app.score - 12);
         app.combo = 0;
       } else {
+        addTapFeedback(effects, hit.x, hit.y - 50, "попал", "#54e6a5");
         app.score += 7 + app.combo;
         app.combo += 1;
       }
@@ -569,6 +634,7 @@ function makeWhackGame() {
         hammer.t -= dt;
         if (hammer.t <= 0) hammer = null;
       }
+      updateTapFeedback(effects, dt);
     },
     draw() {
       drawBg("arcade");
@@ -609,17 +675,21 @@ function makeWhackGame() {
         ctx.strokeRect(-34, -28, 68, 30);
         ctx.restore();
       }
+      drawTapFeedback(effects);
     },
   };
 }
 
 function makeBuildGame() {
   app.time = 40;
-  const materials = [0, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 17, 20, 21, 22, 23, 28, 29, 39, 40, 41, 42, 45, 48, 49, 51, 52, 53, 55, 73, 74, 75, 76, 77, 79];
-  const stack = [{ x: W / 2, y: H - 42, w: 256, h: 26, img: null }];
+  const layers = app.sprites.building_layers
+    .map((item, index) => (item ? index : null))
+    .filter((index) => index !== null);
+  const blockH = 46;
+  const stack = [{ x: W / 2, y: H - 82, w: 330, h: blockH, img: 0, cropStart: 0, cropWidth: 1 }];
   let swing = 0;
   let falling = null;
-  let nextImg = choice(materials);
+  let nextImg = choice(layers.filter((id) => id !== 0));
   let lost = false;
 
   function makeBlock(x, y, w) {
@@ -627,8 +697,10 @@ function makeBuildGame() {
       x,
       y,
       w,
-      h: 42,
+      h: blockH,
       img: nextImg,
+      cropStart: 0,
+      cropWidth: 1,
       vy: 0,
     };
   }
@@ -636,9 +708,9 @@ function makeBuildGame() {
   function drop() {
     if (falling || lost) return;
     const top = stack[stack.length - 1];
-    const hookX = W / 2 + Math.sin(swing) * 300;
-    falling = makeBlock(hookX, 72, Math.max(78, top.w - 8));
-    nextImg = choice(materials);
+    const movingX = W / 2 + Math.sin(swing) * 300;
+    falling = makeBlock(movingX, 82, Math.max(84, top.w - 8));
+    nextImg = choice(layers);
   }
 
   return {
@@ -654,16 +726,24 @@ function makeBuildGame() {
         falling.vy += 960 * dt;
         falling.y += falling.vy * dt;
         const top = stack[stack.length - 1];
-        const targetY = top.y - 31;
+        const targetY = top.y - blockH + 7;
         if (falling.y >= targetY) {
-          const overlap = Math.max(0, Math.min(falling.x + falling.w / 2, top.x + top.w / 2) - Math.max(falling.x - falling.w / 2, top.x - top.w / 2));
+          const fallingLeft = falling.x - falling.w / 2;
+          const fallingRight = falling.x + falling.w / 2;
+          const topLeft = top.x - top.w / 2;
+          const topRight = top.x + top.w / 2;
+          const left = Math.max(fallingLeft, topLeft);
+          const right = Math.min(fallingRight, topRight);
+          const overlap = Math.max(0, right - left);
           if (overlap < 44) {
             lost = true;
             finish("Стройка рухнула");
             return;
           }
           const offset = Math.abs(falling.x - top.x);
-          stack.push({ x: falling.x, y: targetY, w: overlap, h: 32, img: falling.img });
+          const keptStart = falling.cropStart + ((left - fallingLeft) / falling.w) * falling.cropWidth;
+          const keptWidth = (overlap / falling.w) * falling.cropWidth;
+          stack.push({ x: (left + right) / 2, y: targetY, w: overlap, h: blockH, img: falling.img, cropStart: keptStart, cropWidth: keptWidth });
           app.score += Math.round(18 + overlap / 8);
           app.combo = offset < 14 ? app.combo + 1 : 0;
           if (offset < 14) app.score += 14;
@@ -677,34 +757,19 @@ function makeBuildGame() {
       drawPanel(26, 24, 330, 56, "rgba(13,11,25,0.84)");
       drawText(`этажи: ${stack.length - 1}`, 46, 40, 24, "#ffd84a");
       drawImageFit(sprite("lenya_pose", 2), 752, 330, 128, 166, "bottom");
-      const hookX = W / 2 + Math.sin(swing) * 300;
-      ctx.strokeStyle = "#fff6d7";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(W / 2, 0);
-      ctx.lineTo(hookX, 64);
-      ctx.stroke();
-      ctx.fillStyle = "#5b331e";
-      ctx.fillRect(hookX - 18, 62, 36, 14);
+      const movingX = W / 2 + Math.sin(swing) * 300;
+      ctx.fillStyle = "#2a1a12";
+      ctx.fillRect(movingX - 26, 58, 52, 12);
+      ctx.fillStyle = "#ff9f43";
+      ctx.fillRect(movingX - 18, 66, 36, 10);
       if (!falling) {
-        drawImageFit(sprite("construction", nextImg), hookX - 50, 76, 100, 62);
+        drawLayerBlock({ x: movingX, y: 84, w: Math.max(84, stack[stack.length - 1].w - 8), h: blockH, img: nextImg, cropStart: 0, cropWidth: 1 });
       }
       stack.forEach((block, i) => {
-        if (i === 0) {
-          ctx.fillStyle = "#3b2b25";
-          ctx.fillRect(block.x - block.w / 2, block.y, block.w, block.h);
-          ctx.strokeStyle = "#fff6d7";
-          ctx.lineWidth = 3;
-          ctx.strokeRect(block.x - block.w / 2, block.y, block.w, block.h);
-          return;
-        }
-        drawImageFit(sprite("construction", block.img), block.x - block.w / 2, block.y - 8, block.w, 48);
-        ctx.strokeStyle = "#fff6d7";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(block.x - block.w / 2, block.y + 2, block.w, 26);
+        drawLayerBlock(block);
       });
       if (falling) {
-        drawImageFit(sprite("construction", falling.img), falling.x - falling.w / 2, falling.y - 16, falling.w, 54);
+        drawLayerBlock(falling);
       }
       drawText("тап / пробел чтобы положить материал", W / 2, 500, 20, "#c9c0df", "center");
     },
@@ -1086,12 +1151,8 @@ async function init() {
   renderMenu();
   showOverlay("Загрузка", "Готовим спрайты и мини-игры.");
   await loadAssets();
-  document.querySelector("#startBtn").addEventListener("click", () => {
-    if (app.activeId && app.running) restartGame();
-    else selectGame(app.activeId || games[0].id);
-  });
-  document.querySelector("#restartBtn").addEventListener("click", restartGame);
-  document.querySelector("#menuBtn").addEventListener("click", showMenu);
+  restartBtn.addEventListener("click", restartGame);
+  menuBtn.addEventListener("click", showMenu);
   document.querySelector("#randomBtn").addEventListener("click", () => selectGame(choice(games).id));
   const initialId = location.hash.replace("#", "");
   if (games.some((game) => game.id === initialId)) {

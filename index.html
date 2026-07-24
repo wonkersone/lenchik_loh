@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ru">
   <head>
     <meta charset="utf-8">
@@ -39,17 +39,14 @@
               <p id="gameKind" class="kicker">READY</p>
               <h2 id="gameTitle">Выбери игру</h2>
             </div>
-            <div id="hud" class="hud"></div>
+            <div class="hud-wrap">
+              <div id="hud" class="hud"></div>
+              <button id="menuBtn" class="hud-action" type="button">меню</button>
+            </div>
           </div>
-
-          <div class="controls">
-            <button id="startBtn" type="button">старт</button>
-            <button id="restartBtn" type="button">заново</button>
-            <button id="menuBtn" type="button">меню</button>
-          </div>
-
           <div class="canvas-frame">
             <canvas id="gameCanvas" width="960" height="540" aria-label="Игровой экран"></canvas>
+            <button id="restartBtn" class="restart-float" type="button" hidden>заново</button>
             <div id="overlay" class="overlay"></div>
           </div>
         </section>
@@ -59,3 +56,4 @@
     <script src="game.js"></script>
   </body>
 </html>
+
