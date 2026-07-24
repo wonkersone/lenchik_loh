@@ -59,7 +59,7 @@ const games = [
     desc: "Бей Лёню, Еву с тортиком не трогай.",
     accent: "#ff4f78",
     icon: "lenya_face/lenya_face-04.png",
-    introImage: "eva/eva-02.png",
+    introImage: "eva/eva-09.png",
     rules: "Леня и Ева выскакивают из лунок. Бей только Леню. Если ударишь Еву с тортом, счет падает.",
     make: makeWhackGame,
   },
@@ -67,11 +67,11 @@ const games = [
     id: "build",
     title: "Строитель МГСУ",
     kind: "ловкость",
-    desc: "Лови материалы и собирай этажи.",
+    desc: "Собери стройку повыше.",
     accent: "#ff9f43",
     icon: "lenya_face/lenya_face-16.png",
     introImage: "lenya_pose/lenya_pose-02.png",
-    rules: "Двигай Леню по стройке, лови нормальные материалы и не хватай опасные знаки.",
+    rules: "Тапай, когда материал ровно над башней. Чем точнее кладешь блоки, тем выше стройка и больше очков.",
     make: makeBuildGame,
   },
   {
@@ -106,17 +106,6 @@ const games = [
     introImage: "lenya_face/lenya_face-04.png",
     rules: "Меняй местами соседние лица. Три одинаковых в ряд исчезают и дают очки.",
     make: makeMatchGame,
-  },
-  {
-    id: "tower",
-    title: "Башня из учебников",
-    kind: "тайминг",
-    desc: "Роняй книги ровно, не завали башню.",
-    accent: "#9b7cff",
-    icon: "lenya_face/lenya_face-19.png",
-    introImage: "lenya_pose/lenya_pose-03.png",
-    rules: "Тапай в нужный момент, чтобы бросить учебник ровно на башню. Чем ровнее, тем больше очков.",
-    make: makeTowerGame,
   },
 ];
 
@@ -495,7 +484,12 @@ function makeSearchGame() {
 function makeWhackGame() {
   app.time = 30;
   const holes = [];
-  const faces = [2, 4, 7, 12, 15, 17, 21, 23];
+  const faces = app.sprites.lenya_face
+    .map((item, index) => (item ? index : null))
+    .filter((index) => index !== null);
+  const evaFaces = app.sprites.eva
+    .map((item, index) => (item && index >= 9 && index <= 20 ? index : null))
+    .filter((index) => index !== null);
   for (let y = 0; y < 3; y += 1) {
     for (let x = 0; x < 3; x += 1) {
       holes.push({
@@ -507,6 +501,7 @@ function makeWhackGame() {
         state: "hidden",
         kind: "none",
         face: 0,
+        evaFace: 9,
         hit: 0,
       });
     }
@@ -519,10 +514,11 @@ function makeWhackGame() {
     if (!candidates.length) return;
     const hole = choice(candidates);
     hole.phase = 0;
-    hole.life = rand(0.58, 0.9);
+    hole.life = rand(0.28, 0.62);
     hole.state = "rising";
     hole.kind = Math.random() < 0.2 ? "eva" : "lenya";
     hole.face = choice(faces);
+    hole.evaFace = choice(evaFaces);
   }
 
   return {
@@ -548,12 +544,12 @@ function makeWhackGame() {
       spawn -= dt;
       if (spawn <= 0) {
         pop();
-        spawn = rand(0.72, 1.28);
+        spawn = rand(0.62, 1.36);
       }
       holes.forEach((hole) => {
         if (hole.hit > 0) hole.hit = Math.max(0, hole.hit - dt);
         if (hole.state === "rising") {
-          hole.phase += dt / 0.12;
+          hole.phase += dt / 0.08;
           if (hole.phase >= 1) {
             hole.phase = 1;
             hole.state = "up";
@@ -562,7 +558,7 @@ function makeWhackGame() {
           hole.life -= dt;
           if (hole.life <= 0) hole.state = "falling";
         } else if (hole.state === "falling") {
-          hole.phase -= dt / 0.14;
+          hole.phase -= dt / 0.1;
           if (hole.phase <= 0) {
             hole.phase = 0;
             hole.state = "hidden";
@@ -595,7 +591,7 @@ function makeWhackGame() {
         ctx.stroke();
         if (hole.state !== "hidden" || hole.phase > 0) {
           const lift = Math.sin(hole.phase * Math.PI * 0.5) * 82;
-          const image = hole.kind === "eva" ? sprite("eva", 2) : sprite("lenya_face", hole.face);
+          const image = hole.kind === "eva" ? sprite("eva", hole.evaFace) : sprite("lenya_face", hole.face);
           const shake = hole.hit > 0 ? Math.sin(hole.hit * 80) * 5 : 0;
           drawImageFit(image, hole.x - 60 + shake, hole.y + 16 - lift, 120, 120);
         }
@@ -618,76 +614,99 @@ function makeWhackGame() {
 }
 
 function makeBuildGame() {
-  app.time = 38;
-  let playerX = W / 2;
-  const fallers = [];
-  const tower = [];
-  let spawn = 0;
-  const good = [0, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 17, 20, 21, 22, 23, 28, 29, 39, 40, 41, 42, 45, 48, 49, 51, 52, 53, 55, 73, 74, 75, 76, 77, 79];
-  const bad = [43, 44, 56, 57, 60, 61, 62, 65, 67, 68, 69, 70, 71];
+  app.time = 40;
+  const materials = [0, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 17, 20, 21, 22, 23, 28, 29, 39, 40, 41, 42, 45, 48, 49, 51, 52, 53, 55, 73, 74, 75, 76, 77, 79];
+  const stack = [{ x: W / 2, y: H - 42, w: 256, h: 26, img: null }];
+  let swing = 0;
+  let falling = null;
+  let nextImg = choice(materials);
+  let lost = false;
 
-  function addFaller() {
-    const isBad = Math.random() < 0.24;
-    fallers.push({
-      x: rand(130, W - 130),
-      y: -50,
-      vy: rand(130, 190),
-      size: rand(48, 68),
-      bad: isBad,
-      img: sprite("construction", choice(isBad ? bad : good)),
-    });
+  function makeBlock(x, y, w) {
+    return {
+      x,
+      y,
+      w,
+      h: 42,
+      img: nextImg,
+      vy: 0,
+    };
+  }
+
+  function drop() {
+    if (falling || lost) return;
+    const top = stack[stack.length - 1];
+    const hookX = W / 2 + Math.sin(swing) * 300;
+    falling = makeBlock(hookX, 72, Math.max(78, top.w - 8));
+    nextImg = choice(materials);
   }
 
   return {
-    move(p) {
-      playerX = clamp(p.x, 95, W - 95);
+    tap() {
+      drop();
     },
-    tap(p) {
-      playerX = clamp(p.x, 95, W - 95);
+    key(key) {
+      if (key === " " || key === "enter") drop();
     },
     update(dt) {
-      if (app.keys.has("arrowleft") || app.keys.has("a")) playerX -= 380 * dt;
-      if (app.keys.has("arrowright") || app.keys.has("d")) playerX += 380 * dt;
-      playerX = clamp(playerX, 95, W - 95);
-      spawn -= dt;
-      if (spawn <= 0) {
-        addFaller();
-        spawn = rand(0.42, 0.72);
-      }
-      for (let i = fallers.length - 1; i >= 0; i -= 1) {
-        const f = fallers[i];
-        f.y += f.vy * dt;
-        if (f.y > H - 118 && Math.abs(f.x - playerX) < 78) {
-          if (f.bad) {
-            app.score = Math.max(0, app.score - 10);
-            app.combo = 0;
-            tower.pop();
-          } else {
-            app.score += 9 + app.combo;
-            app.combo += 1;
-            tower.push(f.img);
+      swing += dt * 2.85;
+      if (falling) {
+        falling.vy += 960 * dt;
+        falling.y += falling.vy * dt;
+        const top = stack[stack.length - 1];
+        const targetY = top.y - 31;
+        if (falling.y >= targetY) {
+          const overlap = Math.max(0, Math.min(falling.x + falling.w / 2, top.x + top.w / 2) - Math.max(falling.x - falling.w / 2, top.x - top.w / 2));
+          if (overlap < 44) {
+            lost = true;
+            finish("Стройка рухнула");
+            return;
           }
-          fallers.splice(i, 1);
-        } else if (f.y > H + 80) {
-          fallers.splice(i, 1);
+          const offset = Math.abs(falling.x - top.x);
+          stack.push({ x: falling.x, y: targetY, w: overlap, h: 32, img: falling.img });
+          app.score += Math.round(18 + overlap / 8);
+          app.combo = offset < 14 ? app.combo + 1 : 0;
+          if (offset < 14) app.score += 14;
+          falling = null;
+          if (stack.length >= 14) finish("Стройка готова");
         }
       }
     },
     draw() {
       drawBg("build");
-      drawPanel(24, 22, 292, 54, "rgba(13,11,25,0.8)");
-      drawText(`этажи: ${tower.length}`, 44, 38, 24, "#ffd84a");
-      const baseX = 58;
-      for (let i = 0; i < tower.length; i += 1) {
-        const y = H - 34 - i * 19;
-        ctx.fillStyle = i % 2 ? "#d96d34" : "#ff9f43";
-        ctx.fillRect(baseX + (i % 3) * 3, y, 142, 17);
+      drawPanel(26, 24, 330, 56, "rgba(13,11,25,0.84)");
+      drawText(`этажи: ${stack.length - 1}`, 46, 40, 24, "#ffd84a");
+      drawImageFit(sprite("lenya_pose", 2), 752, 330, 128, 166, "bottom");
+      const hookX = W / 2 + Math.sin(swing) * 300;
+      ctx.strokeStyle = "#fff6d7";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(W / 2, 0);
+      ctx.lineTo(hookX, 64);
+      ctx.stroke();
+      ctx.fillStyle = "#5b331e";
+      ctx.fillRect(hookX - 18, 62, 36, 14);
+      if (!falling) {
+        drawImageFit(sprite("construction", nextImg), hookX - 50, 76, 100, 62);
+      }
+      stack.forEach((block, i) => {
+        if (i === 0) {
+          ctx.fillStyle = "#3b2b25";
+          ctx.fillRect(block.x - block.w / 2, block.y, block.w, block.h);
+          ctx.strokeStyle = "#fff6d7";
+          ctx.lineWidth = 3;
+          ctx.strokeRect(block.x - block.w / 2, block.y, block.w, block.h);
+          return;
+        }
+        drawImageFit(sprite("construction", block.img), block.x - block.w / 2, block.y - 8, block.w, 48);
         ctx.strokeStyle = "#fff6d7";
         ctx.lineWidth = 2;
-        ctx.strokeRect(baseX + (i % 3) * 3, y, 142, 17);
+        ctx.strokeRect(block.x - block.w / 2, block.y + 2, block.w, 26);
+      });
+      if (falling) {
+        drawImageFit(sprite("construction", falling.img), falling.x - falling.w / 2, falling.y - 16, falling.w, 54);
       }
-      fallers.forEach((f) => drawImageFit(f.img, f.x - f.size / 2, f.y - f.size / 2, f.size, f.size));
-      drawImageFit(sprite("lenya_pose", 2), playerX - 56, H - 150, 112, 132, "bottom");
+      drawText("тап / пробел чтобы положить материал", W / 2, 500, 20, "#c9c0df", "center");
     },
   };
 }
