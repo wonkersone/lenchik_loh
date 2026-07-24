@@ -48,6 +48,8 @@ const games = [
     desc: "Найди нужную вещь среди школьного хаоса.",
     accent: "#43b6ff",
     icon: "lenya_face/lenya_face-23.png",
+    introImage: "lenya_pose/lenya_pose-08.png",
+    rules: "На экране куча школьных вещей. Среди них ровно один рюкзак. Найди его до звонка: каждый раз цвет рюкзака меняется.",
     make: makeSearchGame,
   },
   {
@@ -57,6 +59,8 @@ const games = [
     desc: "Бей Лёню, Еву с тортиком не трогай.",
     accent: "#ff4f78",
     icon: "lenya_face/lenya_face-04.png",
+    introImage: "eva/eva-02.png",
+    rules: "Леня и Ева выскакивают из лунок. Бей только Леню. Если ударишь Еву с тортом, счет падает.",
     make: makeWhackGame,
   },
   {
@@ -66,6 +70,8 @@ const games = [
     desc: "Лови материалы и собирай этажи.",
     accent: "#ff9f43",
     icon: "lenya_face/lenya_face-16.png",
+    introImage: "lenya_pose/lenya_pose-02.png",
+    rules: "Двигай Леню по стройке, лови нормальные материалы и не хватай опасные знаки.",
     make: makeBuildGame,
   },
   {
@@ -75,6 +81,8 @@ const games = [
     desc: "Шашки 40",
     accent: "#ffd84a",
     icon: "lenya_face/lenya_face-17.png",
+    introImage: "racing/racing-21.png",
+    rules: "Тапай слева или справа, меняй полосу, объезжай конусы и собирай бонусы.",
     make: makeRaceGame,
   },
   {
@@ -84,6 +92,8 @@ const games = [
     desc: "Жми левый и правый борт в такт.",
     accent: "#54e6a5",
     icon: "lenya_face/lenya_face-21.png",
+    introImage: "lenya_pose/lenya_pose-06.png",
+    rules: "Жми левый и правый борт по очереди. Сбился с ритма - теряешь комбо.",
     make: makeRowGame,
   },
   {
@@ -93,6 +103,8 @@ const games = [
     desc: "Собирай одинаковые лица в ряд.",
     accent: "#f865b0",
     icon: "lenya_face/lenya_face-04.png",
+    introImage: "lenya_face/lenya_face-04.png",
+    rules: "Меняй местами соседние лица. Три одинаковых в ряд исчезают и дают очки.",
     make: makeMatchGame,
   },
   {
@@ -102,6 +114,8 @@ const games = [
     desc: "Роняй книги ровно, не завали башню.",
     accent: "#9b7cff",
     icon: "lenya_face/lenya_face-19.png",
+    introImage: "lenya_pose/lenya_pose-03.png",
+    rules: "Тапай в нужный момент, чтобы бросить учебник ровно на башню. Чем ровнее, тем больше очков.",
     make: makeTowerGame,
   },
 ];
@@ -201,6 +215,23 @@ function showOverlay(title, text) {
   overlay.innerHTML = `<div class="overlay-card"><h3>${title}</h3><p>${text}</p></div>`;
 }
 
+function showGameIntro(meta) {
+  const imagePath = meta.introImage ? `assets/sprites/${meta.introImage}` : `assets/sprites/${meta.icon}`;
+  overlay.classList.remove("is-hidden");
+  overlay.innerHTML = `
+    <div class="overlay-card intro-card">
+      <img src="${imagePath}" alt="">
+      <div>
+        <p class="kicker">${meta.kind}</p>
+        <h3>${meta.title}</h3>
+        <p>${meta.rules || meta.desc}</p>
+        <button type="button" data-begin-game>НАЧАТЬ</button>
+      </div>
+    </div>
+  `;
+  overlay.querySelector("[data-begin-game]").addEventListener("click", () => beginGame(meta.id));
+}
+
 function hideOverlay() {
   overlay.classList.add("is-hidden");
   overlay.innerHTML = "";
@@ -216,15 +247,35 @@ function finish(message) {
   saveProgress();
   updateHud();
   renderMenu();
-  showOverlay(message, `Раунд окончен. Очки за попытку: ${roundScore}. Общий счет складывается из лучших результатов.`);
+  showOverlay(message, `Раунд окончен. Очки за попытку: ${roundScore}.`);
 }
 
-function startGame(id) {
+function selectGame(id) {
   const meta = games.find((game) => game.id === id);
   if (!meta) return;
   if (location.hash !== `#${id}`) {
     history.replaceState(null, "", `#${id}`);
   }
+  app.activeId = id;
+  app.score = 0;
+  app.combo = 0;
+  app.time = 0;
+  app.metric = "";
+  app.running = false;
+  app.game = makeGamePreview(meta);
+  titleEl.textContent = meta.title;
+  kindEl.textContent = meta.kind;
+  updateHud();
+  renderMenu();
+  showGameIntro(meta);
+  if (window.innerWidth <= 980) {
+    setTimeout(() => document.querySelector(".stage-wrap").scrollIntoView({ block: "start" }), 40);
+  }
+}
+
+function beginGame(id) {
+  const meta = games.find((game) => game.id === id);
+  if (!meta) return;
   app.activeId = id;
   app.score = 0;
   app.combo = 0;
@@ -244,7 +295,7 @@ function startGame(id) {
 }
 
 function restartGame() {
-  if (app.activeId) startGame(app.activeId);
+  if (app.activeId) beginGame(app.activeId);
 }
 
 function showMenu() {
@@ -276,7 +327,7 @@ function renderMenu() {
     `;
   }).join("");
   gameMenu.querySelectorAll("[data-game]").forEach((button) => {
-    button.addEventListener("click", () => startGame(button.dataset.game));
+    button.addEventListener("click", () => selectGame(button.dataset.game));
   });
 }
 
@@ -290,11 +341,13 @@ function pointerFromEvent(event) {
 
 canvas.addEventListener("pointerdown", (event) => {
   app.pointer = { ...pointerFromEvent(event), down: true };
+  if (!app.running) return;
   app.game?.tap?.(app.pointer);
 });
 
 canvas.addEventListener("pointermove", (event) => {
   app.pointer = { ...pointerFromEvent(event), down: app.pointer.down };
+  if (!app.running) return;
   app.game?.move?.(app.pointer);
 });
 
@@ -305,6 +358,7 @@ canvas.addEventListener("pointerup", (event) => {
 
 window.addEventListener("keydown", (event) => {
   app.keys.add(event.key.toLowerCase());
+  if (!app.running) return;
   app.game?.key?.(event.key.toLowerCase());
 });
 
@@ -319,7 +373,7 @@ function tick(now) {
     app.time = Math.max(0, app.time - dt);
     if (app.time <= 0) finish("Время вышло");
   }
-  app.game?.update?.(dt);
+  if (app.running || app.game?.idle) app.game?.update?.(dt);
   app.game?.draw?.();
   updateHud();
   requestAnimationFrame(tick);
@@ -328,6 +382,7 @@ function tick(now) {
 function makeAttractGame() {
   let t = 0;
   return {
+    idle: true,
     update(dt) {
       t += dt;
     },
@@ -345,16 +400,40 @@ function makeAttractGame() {
   };
 }
 
+function makeGamePreview(meta) {
+  return {
+    idle: true,
+    update() {},
+    draw() {
+      const bgName = meta.id === "search" || meta.id === "tower"
+        ? "school"
+        : meta.id === "build"
+          ? "build"
+          : meta.id === "race"
+            ? "race"
+            : meta.id === "row"
+              ? "river"
+              : "arcade";
+      drawBg(bgName);
+      ctx.fillStyle = "rgba(7,7,16,0.62)";
+      ctx.fillRect(0, 0, W, H);
+    },
+  };
+}
+
 function makeSearchGame() {
   app.time = 42;
   let round = 1;
   let target = null;
   let decoys = [];
-  let pulse = 0;
-  const objectIds = [0, 1, 2, 3, 4, 5, 10, 12, 13, 14, 15, 16, 17, 18, 20, 21, 23, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 38, 39, 44, 45, 46, 47, 48, 49, 52, 53, 55, 57, 59, 60, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79];
+  let missFlash = 0;
+  const backpackIds = [0, 1, 2, 3, 4, 5];
+  const objectIds = app.sprites.objects
+    .map((item, index) => item && !backpackIds.includes(index) ? index : null)
+    .filter((index) => index !== null);
 
   function newRound() {
-    decoys = Array.from({ length: 56 + round * 4 }, () => ({
+    decoys = Array.from({ length: 64 + round * 3 }, () => ({
       img: sprite("objects", choice(objectIds)),
       x: rand(35, W - 95),
       y: rand(104, H - 86),
@@ -364,12 +443,12 @@ function makeSearchGame() {
       alpha: rand(0.62, 0.92),
     }));
     target = {
-      img: sprite("objects", round % 2 ? 0 : 18),
+      img: sprite("objects", choice(backpackIds)),
       x: rand(70, W - 130),
       y: rand(128, H - 112),
-      w: round % 2 ? 68 : 62,
-      h: round % 2 ? 62 : 72,
-      label: round % 2 ? "рюкзак" : "учебник",
+      w: 72,
+      h: 68,
+      label: "рюкзак",
     };
     decoys.splice(Math.floor(Math.random() * decoys.length), 0, target);
   }
@@ -378,20 +457,20 @@ function makeSearchGame() {
 
   return {
     tap(p) {
+      if (!app.running) return;
       if (rectHit(p, target)) {
         app.score += 18 + round * 3 + app.combo * 2;
         app.combo += 1;
         round += 1;
-        pulse = 0.8;
         newRound();
       } else {
         app.score = Math.max(0, app.score - 2);
         app.combo = 0;
-        pulse = -0.35;
+        missFlash = 0.22;
       }
     },
     update(dt) {
-      pulse = pulse > 0 ? Math.max(0, pulse - dt) : Math.min(0, pulse + dt);
+      missFlash = Math.max(0, missFlash - dt);
     },
     draw() {
       drawBg("school");
@@ -405,12 +484,7 @@ function makeSearchGame() {
         drawImageFit(item.img, -item.w / 2, -item.h / 2, item.w, item.h);
         ctx.restore();
       }
-      if (pulse > 0) {
-        ctx.strokeStyle = "#54e6a5";
-        ctx.lineWidth = 6;
-        ctx.strokeRect(target.x - 8, target.y - 8, target.w + 16, target.h + 16);
-      }
-      if (pulse < 0) {
+      if (missFlash > 0) {
         ctx.fillStyle = "rgba(255,79,120,0.22)";
         ctx.fillRect(0, 0, W, H);
       }
@@ -419,26 +493,43 @@ function makeSearchGame() {
 }
 
 function makeWhackGame() {
-  app.time = 32;
+  app.time = 30;
   const holes = [];
   const faces = [2, 4, 7, 12, 15, 17, 21, 23];
   for (let y = 0; y < 3; y += 1) {
     for (let x = 0; x < 3; x += 1) {
-      holes.push({ x: 230 + x * 250, y: 110 + y * 132, r: 48, up: 0, kind: "none", face: 0 });
+      holes.push({
+        x: 230 + x * 250,
+        y: 120 + y * 126,
+        r: 54,
+        phase: 0,
+        life: 0,
+        state: "hidden",
+        kind: "none",
+        face: 0,
+        hit: 0,
+      });
     }
   }
-  let spawn = 0;
+  let spawn = 0.7;
+  let hammer = null;
 
   function pop() {
-    const hole = choice(holes);
-    hole.up = 0.82;
+    const candidates = holes.filter((hole) => hole.state === "hidden");
+    if (!candidates.length) return;
+    const hole = choice(candidates);
+    hole.phase = 0;
+    hole.life = rand(0.58, 0.9);
+    hole.state = "rising";
     hole.kind = Math.random() < 0.2 ? "eva" : "lenya";
     hole.face = choice(faces);
   }
 
   return {
     tap(p) {
-      const hit = holes.find((hole) => hole.up > 0.12 && circleHit(p, hole));
+      if (!app.running) return;
+      const hit = holes.find((hole) => hole.state === "up" && circleHit(p, { x: hole.x, y: hole.y - 44, r: 58 }));
+      hammer = { x: p.x, y: p.y, t: 0.16 };
       if (!hit) {
         app.combo = 0;
         return;
@@ -450,38 +541,78 @@ function makeWhackGame() {
         app.score += 7 + app.combo;
         app.combo += 1;
       }
-      hit.up = 0;
+      hit.hit = 0.16;
+      hit.state = "falling";
     },
     update(dt) {
       spawn -= dt;
       if (spawn <= 0) {
         pop();
-        spawn = rand(0.34, 0.62);
+        spawn = rand(0.72, 1.28);
       }
       holes.forEach((hole) => {
-        hole.up = Math.max(0, hole.up - dt);
+        if (hole.hit > 0) hole.hit = Math.max(0, hole.hit - dt);
+        if (hole.state === "rising") {
+          hole.phase += dt / 0.12;
+          if (hole.phase >= 1) {
+            hole.phase = 1;
+            hole.state = "up";
+          }
+        } else if (hole.state === "up") {
+          hole.life -= dt;
+          if (hole.life <= 0) hole.state = "falling";
+        } else if (hole.state === "falling") {
+          hole.phase -= dt / 0.14;
+          if (hole.phase <= 0) {
+            hole.phase = 0;
+            hole.state = "hidden";
+          }
+        }
       });
+      if (hammer) {
+        hammer.t -= dt;
+        if (hammer.t <= 0) hammer = null;
+      }
     },
     draw() {
       drawBg("arcade");
-      drawPanel(150, 66, 660, 430, "rgba(9, 8, 20, 0.62)");
+      drawPanel(150, 66, 660, 430, "rgba(9, 8, 20, 0.50)");
       holes.forEach((hole) => {
+        ctx.fillStyle = "#0b0610";
+        ctx.beginPath();
+        ctx.ellipse(hole.x, hole.y + 44, 84, 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#3a2442";
+        ctx.beginPath();
+        ctx.ellipse(hole.x, hole.y + 38, 74, 24, 0, 0, Math.PI * 2);
+        ctx.fill();
         ctx.fillStyle = "#09050d";
         ctx.beginPath();
-        ctx.ellipse(hole.x, hole.y + 42, 76, 28, 0, 0, Math.PI * 2);
+        ctx.ellipse(hole.x, hole.y + 32, 62, 18, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = "#fff6d7";
         ctx.lineWidth = 4;
         ctx.stroke();
-        if (hole.up > 0) {
-          const lift = hole.up * 58;
+        if (hole.state !== "hidden" || hole.phase > 0) {
+          const lift = Math.sin(hole.phase * Math.PI * 0.5) * 82;
           const image = hole.kind === "eva" ? sprite("eva", 2) : sprite("lenya_face", hole.face);
-          drawImageFit(image, hole.x - 58, hole.y - 62 - lift, 116, 116);
-          if (hole.kind === "eva") {
-            drawText("не бей", hole.x, hole.y + 20, 16, "#ff4f78", "center");
-          }
+          const shake = hole.hit > 0 ? Math.sin(hole.hit * 80) * 5 : 0;
+          drawImageFit(image, hole.x - 60 + shake, hole.y + 16 - lift, 120, 120);
         }
       });
+      if (hammer) {
+        ctx.save();
+        ctx.translate(hammer.x, hammer.y);
+        ctx.rotate(-0.65);
+        ctx.fillStyle = "#8b5a2b";
+        ctx.fillRect(-8, -8, 16, 70);
+        ctx.fillStyle = "#d9d4c8";
+        ctx.fillRect(-34, -28, 68, 30);
+        ctx.strokeStyle = "#fff6d7";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(-34, -28, 68, 30);
+        ctx.restore();
+      }
     },
   };
 }
@@ -937,15 +1068,15 @@ async function init() {
   showOverlay("Загрузка", "Готовим спрайты и мини-игры.");
   await loadAssets();
   document.querySelector("#startBtn").addEventListener("click", () => {
-    if (app.activeId) restartGame();
-    else startGame(games[0].id);
+    if (app.activeId && app.running) restartGame();
+    else selectGame(app.activeId || games[0].id);
   });
   document.querySelector("#restartBtn").addEventListener("click", restartGame);
   document.querySelector("#menuBtn").addEventListener("click", showMenu);
-  document.querySelector("#randomBtn").addEventListener("click", () => startGame(choice(games).id));
+  document.querySelector("#randomBtn").addEventListener("click", () => selectGame(choice(games).id));
   const initialId = location.hash.replace("#", "");
   if (games.some((game) => game.id === initialId)) {
-    startGame(initialId);
+    selectGame(initialId);
   } else {
     showMenu();
   }
