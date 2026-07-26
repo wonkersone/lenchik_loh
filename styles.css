@@ -409,7 +409,7 @@ canvas {
   .hud-wrap {
     min-width: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 86px;
+    grid-template-columns: minmax(0, 1fr) repeat(2, 86px);
   }
 
   .hud-action {

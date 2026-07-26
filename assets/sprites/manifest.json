@@ -1717,6 +1717,23 @@
       "file": "assets/sprites/rowing/rowing-boat-lenya.png",
       "w": 640,
       "h": 275
+    },
+    {
+      "file": "assets/sprites/rowing/rowing-boat-lenya-stroke.png",
+      "w": 640,
+      "h": 267
+    },
+    {
+      "file": "assets/sprites/rowing/rowing-buoy.png",
+      "w": 56,
+      "h": 84
+    }
+  ],
+  "match_items": [
+    {
+      "file": "assets/sprites/match_items/match-ushanka.png",
+      "w": 72,
+      "h": 72
     }
   ]
 }

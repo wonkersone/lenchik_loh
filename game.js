@@ -11,6 +11,7 @@ const kindEl = document.querySelector("#gameKind");
 const totalScoreEl = document.querySelector("#totalScore");
 const restartBtn = document.querySelector("#restartBtn");
 const menuBtn = document.querySelector("#menuBtn");
+const pauseBtn = document.querySelector("#pauseBtn");
 
 ctx.imageSmoothingEnabled = false;
 
@@ -25,6 +26,7 @@ const app = {
   game: null,
   activeId: null,
   running: false,
+  paused: false,
   lastTime: 0,
   score: 0,
   time: 0,
@@ -260,6 +262,7 @@ function updateHud() {
     ["комбо", app.combo],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   totalScoreEl.textContent = totalScore();
+  pauseBtn.textContent = app.paused ? "дальше" : "пауза";
 }
 
 function showOverlay(title, text) {
@@ -267,8 +270,21 @@ function showOverlay(title, text) {
   overlay.innerHTML = `<div class="overlay-card"><h3>${title}</h3><p>${text}</p></div>`;
 }
 
+function showPauseOverlay() {
+  overlay.classList.remove("is-hidden");
+  overlay.innerHTML = `
+    <div class="overlay-card">
+      <h3>Пауза</h3>
+      <p>Игра остановлена.</p>
+      <button type="button" data-resume-game>ПРОДОЛЖИТЬ</button>
+    </div>
+  `;
+  overlay.querySelector("[data-resume-game]").addEventListener("click", togglePause);
+}
+
 function showGameIntro(meta) {
   restartBtn.hidden = true;
+  pauseBtn.hidden = true;
   const imagePath = meta.introImage ? `assets/sprites/${meta.introImage}` : `assets/sprites/${meta.icon}`;
   overlay.classList.remove("is-hidden");
   overlay.innerHTML = `
@@ -292,6 +308,8 @@ function hideOverlay() {
 
 function finish(message) {
   app.running = false;
+  app.paused = false;
+  pauseBtn.hidden = true;
   const roundScore = Math.max(0, Math.round(app.score));
   if (app.activeId) {
     store.best[app.activeId] = Math.max(Number(store.best[app.activeId] || 0), roundScore);
@@ -315,7 +333,9 @@ function selectGame(id) {
   app.time = 0;
   app.metric = "";
   app.running = false;
+  app.paused = false;
   restartBtn.hidden = true;
+  pauseBtn.hidden = true;
   app.game = makeGamePreview(meta);
   titleEl.textContent = meta.title;
   kindEl.textContent = meta.kind;
@@ -336,7 +356,9 @@ function beginGame(id) {
   app.time = 35;
   app.metric = "";
   app.running = true;
+  app.paused = false;
   restartBtn.hidden = false;
+  pauseBtn.hidden = false;
   app.lastTime = performance.now();
   app.game = meta.make();
   titleEl.textContent = meta.title;
@@ -351,15 +373,30 @@ function beginGame(id) {
 
 function restartGame() {
   if (!app.activeId) return;
+  app.paused = false;
   restartBtn.classList.remove("is-pulsing");
   void restartBtn.offsetWidth;
   restartBtn.classList.add("is-pulsing");
   beginGame(app.activeId);
 }
 
+function togglePause() {
+  if (!app.activeId || !app.running) return;
+  app.paused = !app.paused;
+  if (app.paused) {
+    showPauseOverlay();
+  } else {
+    hideOverlay();
+    app.lastTime = performance.now();
+  }
+  updateHud();
+}
+
 function showMenu() {
   app.running = false;
+  app.paused = false;
   restartBtn.hidden = true;
+  pauseBtn.hidden = true;
   app.game = makeAttractGame();
   app.activeId = null;
   titleEl.textContent = "Выбери игру";
@@ -401,13 +438,13 @@ function pointerFromEvent(event) {
 
 canvas.addEventListener("pointerdown", (event) => {
   app.pointer = { ...pointerFromEvent(event), down: true };
-  if (!app.running) return;
+  if (!app.running || app.paused) return;
   app.game?.tap?.(app.pointer);
 });
 
 canvas.addEventListener("pointermove", (event) => {
   app.pointer = { ...pointerFromEvent(event), down: app.pointer.down };
-  if (!app.running) return;
+  if (!app.running || app.paused) return;
   app.game?.move?.(app.pointer);
 });
 
@@ -418,7 +455,11 @@ canvas.addEventListener("pointerup", (event) => {
 
 window.addEventListener("keydown", (event) => {
   app.keys.add(event.key.toLowerCase());
-  if (!app.running) return;
+  if (event.key.toLowerCase() === "p" || event.key.toLowerCase() === "з") {
+    togglePause();
+    return;
+  }
+  if (!app.running || app.paused) return;
   app.game?.key?.(event.key.toLowerCase());
 });
 
@@ -429,11 +470,11 @@ window.addEventListener("keyup", (event) => {
 function tick(now) {
   const dt = Math.min(0.05, (now - app.lastTime) / 1000 || 0);
   app.lastTime = now;
-  if (app.running) {
+  if (app.running && !app.paused) {
     app.time = Math.max(0, app.time - dt);
     if (app.time <= 0) finish("Время вышло");
   }
-  if (app.running || app.game?.idle) app.game?.update?.(dt);
+  if ((app.running && !app.paused) || app.game?.idle) app.game?.update?.(dt);
   app.game?.draw?.();
   updateHud();
   requestAnimationFrame(tick);
@@ -923,7 +964,6 @@ function makeRaceGame() {
       drawImageFit(sprite("racing", 21), lanes[lane] - 52, H - 132, 104, 108, "bottom");
       drawTapFeedback(effects);
       drawText(`${Math.floor(distance / 100)} м`, 36, 34, 28, "#ffd84a");
-      drawText("тап слева / справа", W - 36, 34, 20, "#fff6d7", "right");
     },
   };
 }
@@ -931,7 +971,7 @@ function makeRaceGame() {
 function makeRowGame() {
   app.time = 34;
   const hitX = 310;
-  const boatX = 388;
+  const boatX = 268;
   const boatY = 238;
   const beats = [];
   const effects = [];
@@ -1018,19 +1058,13 @@ function makeRowGame() {
       ctx.fillStyle = "rgba(40, 148, 185, 0.64)";
       ctx.fillRect(0, 168, W, 206);
       ctx.fillStyle = "rgba(146, 230, 255, 0.34)";
-      for (let x = -120 + (water % 120); x < W; x += 120) {
+      for (let x = -120 - (water % 120); x < W; x += 120) {
         ctx.fillRect(x, 222, 64, 5);
         ctx.fillRect(x + 46, 303, 72, 4);
       }
-      for (let x = -80 + (water % 96); x < W + 80; x += 96) {
-        ctx.fillStyle = "#ff4f78";
-        ctx.beginPath();
-        ctx.arc(x, 156, 13, 0, Math.PI * 2);
-        ctx.arc(x + 42, 386, 13, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#fff6d7";
-        ctx.fillRect(x - 2, 156, 4, 32);
-        ctx.fillRect(x + 40, 354, 4, 32);
+      for (let x = -80 - (water % 96); x < W + 80; x += 96) {
+        drawImageFit(sprite("rowing", 2), x - 22, 126, 44, 66);
+        drawImageFit(sprite("rowing", 2), x + 20, 356, 44, 66);
       }
       ctx.strokeStyle = "#ffd84a";
       ctx.lineWidth = 5;
@@ -1052,27 +1086,49 @@ function makeRowGame() {
         drawText(beat.side === "left" ? "L" : "R", beat.x, beat.y - 15, 28, "#070710", "center");
       });
       const kick = boatKick > 0 ? Math.sin(boatKick * 44) * 13 + 18 : 0;
-      drawImageFit(sprite("rowing", 0), boatX + kick, boatY - 72, 248, 118);
+      drawImageFit(sprite("rowing", boatKick > 0 ? 1 : 0), boatX + kick, boatY - 72, 248, 118);
       if (missFlash > 0) {
         ctx.fillStyle = "rgba(255,79,120,0.22)";
         ctx.fillRect(0, 0, W, H);
       }
       drawTapFeedback(effects);
       drawText(`${Math.floor(distance)} м`, 36, 34, 28, "#ffd84a");
-      drawText("лови L / R у желтой черты", W - 36, 34, 20, "#fff6d7", "right");
     },
   };
 }
 
 function makeMatchGame() {
   app.time = 45;
-  const faces = [1, 2, 4, 7, 12, 16];
-  const size = 6;
-  const boardX = 264;
-  const boardY = 72;
-  const cell = 68;
+  const tiles = [
+    "lenya_face:4",
+    "eva:9",
+    "objects:0",
+    "objects:60",
+    "match_items:0",
+  ];
+  const size = 5;
+  const cell = 74;
+  const boardX = Math.round((W - cell * size) / 2);
+  const boardY = 78;
   let selected = null;
-  let grid = Array.from({ length: size * size }, () => choice(faces));
+  let grid = makeGrid();
+
+  function makeGrid() {
+    const next = [];
+    for (let i = 0; i < size * size; i += 1) {
+      const x = i % size;
+      const y = Math.floor(i / size);
+      let candidates = [...tiles];
+      if (x >= 2 && next[i - 1] === next[i - 2]) {
+        candidates = candidates.filter((tile) => tile !== next[i - 1]);
+      }
+      if (y >= 2 && next[i - size] === next[i - size * 2]) {
+        candidates = candidates.filter((tile) => tile !== next[i - size]);
+      }
+      next[i] = choice(candidates);
+    }
+    return next;
+  }
 
   function indexAt(p) {
     const x = Math.floor((p.x - boardX) / cell);
@@ -1111,7 +1167,7 @@ function makeMatchGame() {
   }
 
   function refill(cleared) {
-    cleared.forEach((i) => { grid[i] = choice(faces); });
+    cleared.forEach((i) => { grid[i] = choice(tiles); });
   }
 
   function clearExisting(addScore = true) {
@@ -1125,7 +1181,10 @@ function makeMatchGame() {
     return true;
   }
 
-  while (clearExisting(false)) {}
+  function drawTile(tile, x, y, w, h) {
+    const [group, id] = tile.split(":");
+    drawImageFit(sprite(group, Number(id)), x, y, w, h);
+  }
 
   return {
     tap(p) {
@@ -1157,7 +1216,7 @@ function makeMatchGame() {
         ctx.strokeStyle = "#fff6d7";
         ctx.lineWidth = 3;
         ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
-        drawImageFit(sprite("lenya_face", grid[i]), x + 9, y + 9, cell - 18, cell - 18);
+        drawTile(grid[i], x + 10, y + 10, cell - 20, cell - 20);
       }
       drawText("выбери две соседние плитки", W / 2, 494, 20, "#c9c0df", "center");
     },
@@ -1270,6 +1329,7 @@ async function init() {
   showOverlay("Загрузка", "Готовим спрайты и мини-игры.");
   await loadAssets();
   restartBtn.addEventListener("click", restartGame);
+  pauseBtn.addEventListener("click", togglePause);
   menuBtn.addEventListener("click", showMenu);
   document.querySelector("#randomBtn").addEventListener("click", () => selectGame(choice(games).id));
   const initialId = location.hash.replace("#", "");
