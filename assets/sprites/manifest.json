@@ -1326,6 +1326,11 @@
       "file": "assets/sprites/racing/racing-51.png",
       "w": 79,
       "h": 123
+    },
+    {
+      "file": "assets/sprites/racing/racing-52.png",
+      "w": 72,
+      "h": 72
     }
   ],
   "ui": [

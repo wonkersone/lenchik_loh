@@ -42,6 +42,14 @@ const bgRects = {
   arcade: [768, 682, 768, 342],
 };
 
+const bgFiles = {
+  school: "assets/backgrounds/crops/school.png",
+  build: "assets/backgrounds/crops/build.png",
+  race: "assets/backgrounds/crops/race.png",
+  river: "assets/backgrounds/crops/river.png",
+  arcade: "assets/backgrounds/crops/arcade.png",
+};
+
 const games = [
   {
     id: "search",
@@ -145,6 +153,10 @@ function rectHit(p, r) {
   return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 }
 
+function rectsOverlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
 function circleHit(p, c) {
   const dx = p.x - c.x;
   const dy = p.y - c.y;
@@ -152,9 +164,12 @@ function circleHit(p, c) {
 }
 
 function drawBg(name) {
+  const cropped = img(bgFiles[name]);
   const bg = img("assets/backgrounds/game-backgrounds.png");
   const rect = bgRects[name] || bgRects.arcade;
-  if (bg) {
+  if (cropped) {
+    ctx.drawImage(cropped, 0, 0, W, H);
+  } else if (bg) {
     ctx.drawImage(bg, ...rect, 0, 0, W, H);
   } else {
     ctx.fillStyle = "#111020";
@@ -571,6 +586,16 @@ function makeWhackGame() {
   let hammer = null;
   const effects = [];
 
+  function visibleRect(hole) {
+    const lift = Math.sin(hole.phase * Math.PI * 0.5) * 82;
+    return {
+      x: hole.x - 70,
+      y: hole.y + 4 - lift,
+      w: 140,
+      h: 132,
+    };
+  }
+
   function pop() {
     const candidates = holes.filter((hole) => hole.state === "hidden");
     if (!candidates.length) return;
@@ -586,7 +611,10 @@ function makeWhackGame() {
   return {
     tap(p) {
       if (!app.running) return;
-      const hit = holes.find((hole) => hole.state === "up" && circleHit(p, { x: hole.x, y: hole.y - 44, r: 58 }));
+      const hit = holes.find((hole) => {
+        if ((hole.state !== "rising" && hole.state !== "up") || hole.phase < 0.42) return false;
+        return rectHit(p, visibleRect(hole));
+      });
       hammer = { x: p.x, y: p.y, t: 0.16 };
       if (!hit) {
         addTapFeedback(effects, p.x, p.y, "мимо", "#ff4f78", "cross");
@@ -688,6 +716,7 @@ function makeBuildGame() {
   const blockH = 46;
   const stack = [{ x: W / 2, y: H - 82, w: 330, h: blockH, img: 0, cropStart: 0, cropWidth: 1 }];
   let swing = 0;
+  let cameraY = 0;
   let falling = null;
   let nextImg = choice(layers.filter((id) => id !== 0));
   let lost = false;
@@ -709,7 +738,7 @@ function makeBuildGame() {
     if (falling || lost) return;
     const top = stack[stack.length - 1];
     const movingX = W / 2 + Math.sin(swing) * 300;
-    falling = makeBlock(movingX, 82, Math.max(84, top.w - 8));
+    falling = makeBlock(movingX, 84 - cameraY, Math.max(84, top.w - 8));
     nextImg = choice(layers);
   }
 
@@ -722,10 +751,12 @@ function makeBuildGame() {
     },
     update(dt) {
       swing += dt * 2.85;
+      const top = stack[stack.length - 1];
+      const targetCamera = Math.max(0, 230 - top.y);
+      cameraY += (targetCamera - cameraY) * Math.min(1, dt * 5.8);
       if (falling) {
         falling.vy += 960 * dt;
         falling.y += falling.vy * dt;
-        const top = stack[stack.length - 1];
         const targetY = top.y - blockH + 7;
         if (falling.y >= targetY) {
           const fallingLeft = falling.x - falling.w / 2;
@@ -748,7 +779,6 @@ function makeBuildGame() {
           app.combo = offset < 14 ? app.combo + 1 : 0;
           if (offset < 14) app.score += 14;
           falling = null;
-          if (stack.length >= 14) finish("Стройка готова");
         }
       }
     },
@@ -757,13 +787,15 @@ function makeBuildGame() {
       drawPanel(26, 24, 330, 56, "rgba(13,11,25,0.84)");
       drawText(`этажи: ${stack.length - 1}`, 46, 40, 24, "#ffd84a");
       drawImageFit(sprite("lenya_pose", 2), 752, 330, 128, 166, "bottom");
+      ctx.save();
+      ctx.translate(0, cameraY);
       const movingX = W / 2 + Math.sin(swing) * 300;
       ctx.fillStyle = "#2a1a12";
-      ctx.fillRect(movingX - 26, 58, 52, 12);
+      ctx.fillRect(movingX - 26, 58 - cameraY, 52, 12);
       ctx.fillStyle = "#ff9f43";
-      ctx.fillRect(movingX - 18, 66, 36, 10);
+      ctx.fillRect(movingX - 18, 66 - cameraY, 36, 10);
       if (!falling) {
-        drawLayerBlock({ x: movingX, y: 84, w: Math.max(84, stack[stack.length - 1].w - 8), h: blockH, img: nextImg, cropStart: 0, cropWidth: 1 });
+        drawLayerBlock({ x: movingX, y: 84 - cameraY, w: Math.max(84, stack[stack.length - 1].w - 8), h: blockH, img: nextImg, cropStart: 0, cropWidth: 1 });
       }
       stack.forEach((block, i) => {
         drawLayerBlock(block);
@@ -771,6 +803,7 @@ function makeBuildGame() {
       if (falling) {
         drawLayerBlock(falling);
       }
+      ctx.restore();
       drawText("тап / пробел чтобы положить материал", W / 2, 500, 20, "#c9c0df", "center");
     },
   };
@@ -778,25 +811,44 @@ function makeBuildGame() {
 
 function makeRaceGame() {
   app.time = 36;
-  const lanes = [310, 480, 650];
+  const lanes = [330, 480, 630];
   let lane = 1;
   let distance = 0;
-  let speed = 250;
+  let speed = 270;
   let spawn = 0;
+  let carFlash = 0;
+  let carFlashColor = "#54e6a5";
   const objects = [];
+  const effects = [];
+  const coneIds = [17, 18, 19];
+  const coinId = 52;
+  const road = { x: 230, y: 0, w: 500, h: H };
 
   function setLane(dir) {
     lane = clamp(lane + dir, 0, 2);
   }
 
   function addObject() {
-    const collect = Math.random() < 0.34;
+    const collect = Math.random() < 0.42;
+    const objectLane = Math.floor(Math.random() * 3);
     objects.push({
-      lane: Math.floor(Math.random() * 3),
-      y: -70,
+      lane: objectLane,
+      x: lanes[objectLane],
+      y: -78,
       collect,
-      img: sprite("racing", collect ? choice([16, 26]) : choice([17, 18, 19, 20, 24, 27, 28, 29, 31, 34, 35])),
+      img: sprite("racing", collect ? coinId : choice(coneIds)),
+      size: collect ? 50 : 58,
+      hitW: collect ? 44 : 38,
+      hitH: collect ? 44 : 42,
     });
+  }
+
+  function carRect() {
+    return { x: lanes[lane] - 25, y: H - 120, w: 50, h: 82 };
+  }
+
+  function objectRect(obj) {
+    return { x: obj.x - obj.hitW / 2, y: obj.y + 10, w: obj.hitW, h: obj.hitH };
   }
 
   return {
@@ -812,20 +864,29 @@ function makeRaceGame() {
       spawn -= dt;
       if (spawn <= 0) {
         addObject();
-        spawn = rand(0.52, 0.82);
+        spawn = rand(0.56, 0.9);
       }
       speed = clamp(speed + dt * 10, 250, 420);
+      carFlash = Math.max(0, carFlash - dt);
+      updateTapFeedback(effects, dt);
+      const carHit = carRect();
       for (let i = objects.length - 1; i >= 0; i -= 1) {
         const obj = objects[i];
         obj.y += speed * dt;
-        if (obj.y > H - 122 && obj.y < H - 40 && obj.lane === lane) {
+        if (rectsOverlap(carHit, objectRect(obj))) {
           if (obj.collect) {
             app.score += 18 + app.combo;
             app.combo += 1;
+            carFlash = 0.22;
+            carFlashColor = "#54e6a5";
+            addTapFeedback(effects, obj.x, obj.y + 32, "+монета", "#ffd84a");
           } else {
             app.score = Math.max(0, app.score - 9);
             app.combo = 0;
             speed = Math.max(220, speed - 55);
+            carFlash = 0.28;
+            carFlashColor = "#ff4f78";
+            addTapFeedback(effects, obj.x, obj.y + 30, "удар", "#ff4f78", "cross");
           }
           objects.splice(i, 1);
         } else if (obj.y > H + 80) {
@@ -835,33 +896,32 @@ function makeRaceGame() {
     },
     draw() {
       drawBg("race");
-      const roadTop = 265;
-      const roadBottom = 735;
-      ctx.fillStyle = "rgba(34, 36, 45, 0.88)";
-      ctx.beginPath();
-      ctx.moveTo(480 - roadTop / 2, 0);
-      ctx.lineTo(480 + roadTop / 2, 0);
-      ctx.lineTo(480 + roadBottom / 2, H);
-      ctx.lineTo(480 - roadBottom / 2, H);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,246,215,0.82)";
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(480 - roadTop / 2, 0);
-      ctx.lineTo(480 - roadBottom / 2, H);
-      ctx.moveTo(480 + roadTop / 2, 0);
-      ctx.lineTo(480 + roadBottom / 2, H);
-      ctx.stroke();
-      ctx.fillStyle = "#ffd84a";
-      for (let y = -80 + (distance % 110); y < H; y += 110) {
-        const t = y / H;
-        const width = roadTop + (roadBottom - roadTop) * t;
-        ctx.fillRect(480 - width / 6, y, 8, 58);
-        ctx.fillRect(480 + width / 6, y, 8, 58);
+      ctx.fillStyle = "rgba(7, 9, 14, 0.34)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#252a31";
+      ctx.fillRect(road.x, road.y, road.w, road.h);
+      ctx.fillStyle = "#303640";
+      for (let y = -48 + (distance % 96); y < H; y += 96) {
+        ctx.fillRect(road.x, y, road.w, 42);
       }
-      objects.forEach((obj) => drawImageFit(obj.img, lanes[obj.lane] - 34, obj.y, 68, 68));
+      ctx.fillStyle = "#171a20";
+      ctx.fillRect(road.x - 26, 0, 26, H);
+      ctx.fillRect(road.x + road.w, 0, 26, H);
+      ctx.fillStyle = "#ffd84a";
+      ctx.fillRect(road.x + 16, 0, 7, H);
+      ctx.fillRect(road.x + road.w - 23, 0, 7, H);
+      ctx.fillStyle = "#fff6d7";
+      for (let y = -72 + (distance % 112); y < H; y += 112) {
+        ctx.fillRect(road.x + road.w / 3 - 5, y, 10, 58);
+        ctx.fillRect(road.x + road.w * 2 / 3 - 5, y, 10, 58);
+      }
+      objects.forEach((obj) => drawImageFit(obj.img, obj.x - obj.size / 2, obj.y, obj.size, obj.size));
+      if (carFlash > 0) {
+        ctx.fillStyle = carFlashColor === "#ff4f78" ? "rgba(255,79,120,0.24)" : "rgba(84,230,165,0.22)";
+        ctx.fillRect(lanes[lane] - 58, H - 148, 116, 126);
+      }
       drawImageFit(sprite("racing", 21), lanes[lane] - 52, H - 132, 104, 108, "bottom");
+      drawTapFeedback(effects);
       drawText(`${Math.floor(distance / 100)} м`, 36, 34, 28, "#ffd84a");
       drawText("тап слева / справа", W - 36, 34, 20, "#fff6d7", "right");
     },
@@ -1126,7 +1186,7 @@ function makeTowerGame() {
 
 async function loadAssets() {
   const manifest = await fetch("assets/sprites/manifest.json").then((r) => r.json());
-  const paths = ["assets/backgrounds/game-backgrounds.png"];
+  const paths = ["assets/backgrounds/game-backgrounds.png", ...Object.values(bgFiles)];
   Object.entries(manifest).forEach(([group, items]) => {
     if (group === "ui") return;
     app.sprites[group] = items;
