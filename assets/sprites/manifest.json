@@ -1711,5 +1711,12 @@
       "w": 341,
       "h": 177
     }
+  ],
+  "rowing": [
+    {
+      "file": "assets/sprites/rowing/rowing-boat-lenya.png",
+      "w": 640,
+      "h": 275
+    }
   ]
 }

@@ -589,10 +589,10 @@ function makeWhackGame() {
   function visibleRect(hole) {
     const lift = Math.sin(hole.phase * Math.PI * 0.5) * 82;
     return {
-      x: hole.x - 70,
-      y: hole.y + 4 - lift,
-      w: 140,
-      h: 132,
+      x: hole.x - 86,
+      y: hole.y - 8 - lift,
+      w: 172,
+      h: 158,
     };
   }
 
@@ -612,7 +612,7 @@ function makeWhackGame() {
     tap(p) {
       if (!app.running) return;
       const hit = holes.find((hole) => {
-        if ((hole.state !== "rising" && hole.state !== "up") || hole.phase < 0.42) return false;
+        if (hole.state === "hidden" || hole.phase <= 0.08) return false;
         return rectHit(p, visibleRect(hole));
       });
       hammer = { x: p.x, y: p.y, t: 0.16 };
@@ -930,78 +930,136 @@ function makeRaceGame() {
 
 function makeRowGame() {
   app.time = 34;
-  let expected = "left";
-  let progress = 0;
-  let pulse = 0;
+  const hitX = 310;
+  const boatX = 388;
+  const boatY = 238;
   const beats = [];
-  let spawn = 0;
+  const effects = [];
+  let spawn = 0.55;
+  let water = 0;
+  let boatKick = 0;
+  let missFlash = 0;
+  let speed = 250;
+  let distance = 0;
 
-  function hit(side) {
-    if (side === expected) {
-      app.score += 8 + app.combo;
+  function spawnBeat() {
+    beats.push({
+      side: Math.random() < 0.5 ? "left" : "right",
+      x: W + 58,
+      y: H / 2,
+      hit: false,
+    });
+  }
+
+  function press(side) {
+    if (!app.running) return;
+    let best = null;
+    let bestDistance = Infinity;
+    beats.forEach((beat) => {
+      if (beat.hit || beat.side !== side) return;
+      const d = Math.abs(beat.x - hitX);
+      if (d < bestDistance) {
+        best = beat;
+        bestDistance = d;
+      }
+    });
+    if (best && bestDistance <= 54) {
+      best.hit = true;
+      app.score += 10 + app.combo;
       app.combo += 1;
-      progress += 32 + app.combo * 2;
-      expected = expected === "left" ? "right" : "left";
-      pulse = 0.35;
-      if (progress > 710) finish("Заплыв окончен");
+      distance += 34 + app.combo * 2;
+      speed = clamp(speed + 8, 250, 360);
+      boatKick = 0.22;
+      addTapFeedback(effects, hitX, best.y, "гребок", "#54e6a5");
     } else {
-      app.score = Math.max(0, app.score - 4);
+      app.score = Math.max(0, app.score - 3);
       app.combo = 0;
-      pulse = -0.25;
+      speed = Math.max(230, speed - 18);
+      missFlash = 0.22;
+      addTapFeedback(effects, hitX, H / 2, "мимо", "#ff4f78", "cross");
     }
   }
 
   return {
     tap(p) {
-      hit(p.x < W / 2 ? "left" : "right");
+      press(p.x < W / 2 ? "left" : "right");
     },
     key(key) {
-      if (key === "arrowleft" || key === "a") hit("left");
-      if (key === "arrowright" || key === "d") hit("right");
+      if (key === "arrowleft" || key === "a") press("left");
+      if (key === "arrowright" || key === "d") press("right");
     },
     update(dt) {
+      water += speed * dt;
+      distance += speed * dt * 0.035;
       spawn -= dt;
       if (spawn <= 0) {
-        beats.push({ side: expected, x: W + 40, y: expected === "left" ? 176 : 330 });
-        spawn = 0.62;
+        spawnBeat();
+        spawn = rand(0.56, 0.9);
       }
-      beats.forEach((beat) => {
-        beat.x -= 260 * dt;
-      });
-      while (beats.length && beats[0].x < -50) beats.shift();
-      pulse = pulse > 0 ? Math.max(0, pulse - dt) : Math.min(0, pulse + dt);
+      for (let i = beats.length - 1; i >= 0; i -= 1) {
+        const beat = beats[i];
+        beat.x -= speed * dt;
+        if (!beat.hit && beat.x < hitX - 66) {
+          beat.hit = true;
+          app.combo = 0;
+          missFlash = 0.18;
+          addTapFeedback(effects, hitX, beat.y, "поздно", "#ff4f78", "cross");
+        }
+        if (beat.x < -70 || beat.hit) beats.splice(i, 1);
+      }
+      boatKick = Math.max(0, boatKick - dt);
+      missFlash = Math.max(0, missFlash - dt);
+      updateTapFeedback(effects, dt);
     },
     draw() {
       drawBg("river");
-      ctx.fillStyle = "rgba(255,255,255,0.18)";
-      for (let y = 62; y < H; y += 54) {
-        ctx.fillRect(0, y, W, 3);
+      ctx.fillStyle = "rgba(4, 18, 34, 0.42)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "rgba(40, 148, 185, 0.64)";
+      ctx.fillRect(0, 168, W, 206);
+      ctx.fillStyle = "rgba(146, 230, 255, 0.34)";
+      for (let x = -120 + (water % 120); x < W; x += 120) {
+        ctx.fillRect(x, 222, 64, 5);
+        ctx.fillRect(x + 46, 303, 72, 4);
       }
-      const boatX = 74 + progress;
-      ctx.fillStyle = "#a45d2e";
-      ctx.fillRect(boatX, 246, 146, 38);
-      ctx.strokeStyle = "#fff6d7";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(boatX, 246, 146, 38);
-      drawImageFit(sprite("lenya_pose", 6), boatX + 36, 169, 72, 96, "bottom");
-      beats.forEach((beat) => {
-        ctx.fillStyle = beat.side === "left" ? "#43b6ff" : "#ff4f78";
+      for (let x = -80 + (water % 96); x < W + 80; x += 96) {
+        ctx.fillStyle = "#ff4f78";
         ctx.beginPath();
-        ctx.arc(beat.x, beat.y, 26, 0, Math.PI * 2);
+        ctx.arc(x, 156, 13, 0, Math.PI * 2);
+        ctx.arc(x + 42, 386, 13, 0, Math.PI * 2);
         ctx.fill();
-        drawText(beat.side === "left" ? "L" : "R", beat.x, beat.y - 13, 24, "#070710", "center");
-      });
+        ctx.fillStyle = "#fff6d7";
+        ctx.fillRect(x - 2, 156, 4, 32);
+        ctx.fillRect(x + 40, 354, 4, 32);
+      }
       ctx.strokeStyle = "#ffd84a";
       ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.moveTo(156, 118);
-      ctx.lineTo(156, 400);
+      ctx.moveTo(hitX, 178);
+      ctx.lineTo(hitX, 362);
       ctx.stroke();
-      drawText(expected === "left" ? "ЛЕВО" : "ПРАВО", W / 2, 34, 30, "#ffd84a", "center");
-      if (pulse < 0) {
+      ctx.fillStyle = "rgba(255,216,74,0.18)";
+      ctx.fillRect(hitX - 54, 178, 108, 184);
+      beats.forEach((beat) => {
+        const ready = Math.abs(beat.x - hitX) <= 54;
+        ctx.fillStyle = ready ? "#ffd84a" : beat.side === "left" ? "#43b6ff" : "#ff4f78";
+        ctx.beginPath();
+        ctx.arc(beat.x, beat.y, ready ? 34 : 28, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff6d7";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        drawText(beat.side === "left" ? "L" : "R", beat.x, beat.y - 15, 28, "#070710", "center");
+      });
+      const kick = boatKick > 0 ? Math.sin(boatKick * 44) * 13 + 18 : 0;
+      drawImageFit(sprite("rowing", 0), boatX + kick, boatY - 72, 248, 118);
+      if (missFlash > 0) {
         ctx.fillStyle = "rgba(255,79,120,0.22)";
         ctx.fillRect(0, 0, W, H);
       }
+      drawTapFeedback(effects);
+      drawText(`${Math.floor(distance)} м`, 36, 34, 28, "#ffd84a");
+      drawText("лови L / R у желтой черты", W - 36, 34, 20, "#fff6d7", "right");
     },
   };
 }
