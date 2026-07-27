@@ -601,13 +601,13 @@
   "rowing": [
     {
       "file": "assets/sprites/rowing/rowing-boat-lenya.png",
-      "w": 820,
-      "h": 280
+      "w": 520,
+      "h": 820
     },
     {
       "file": "assets/sprites/rowing/rowing-boat-lenya-stroke.png",
-      "w": 820,
-      "h": 280
+      "w": 520,
+      "h": 820
     },
     {
       "file": "assets/sprites/rowing/rowing-buoy.png",

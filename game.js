@@ -1215,7 +1215,7 @@ function makeRowGame() {
         drawArrowGlyph(beat.x, beat.y, beat.side);
       });
       const kick = boatKick > 0 ? Math.sin(boatKick * 44) * 13 + 18 : 0;
-      drawImageFit(sprite("rowing", strokeFrame > 0 ? 1 : 0), boatX + kick, boatY - 72, 248, 118);
+      drawImageFit(sprite("rowing", strokeFrame > 0 ? 1 : 0), boatX + 50 + kick, boatY - 150, 118, 248);
       if (missFlash > 0) {
         ctx.fillStyle = "rgba(255,79,120,0.22)";
         ctx.fillRect(0, 0, W, H);
@@ -1347,7 +1347,7 @@ function makeRowGameMobile() {
         drawArrowGlyph(beat.x, beat.y, beat.side);
       });
       const kick = boatKick > 0 ? Math.sin(boatKick * 44) * 18 + 18 : 0;
-      drawImageFit(sprite("rowing", strokeFrame > 0 ? 1 : 0), boatX, boatY - 82 - kick, 344, 150);
+      drawImageFit(sprite("rowing", strokeFrame > 0 ? 1 : 0), W / 2 - 82, boatY - 260 - kick, 164, 258);
       if (missFlash > 0) {
         ctx.fillStyle = "rgba(255,79,120,0.22)";
         ctx.fillRect(0, 0, W, H);
