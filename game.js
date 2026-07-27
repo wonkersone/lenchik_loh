@@ -34,7 +34,6 @@ const app = {
   lastTime: 0,
   score: 0,
   time: 0,
-  combo: 0,
   metric: "",
   pointer: { x: W / 2, y: H / 2, down: false },
   keys: new Set(),
@@ -324,7 +323,6 @@ function updateHud() {
   hud.innerHTML = [
     ["счет", app.score],
     ["время", Math.ceil(app.time)],
-    ["комбо", app.combo],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   totalScoreEl.textContent = totalScore();
   pauseBtn.textContent = app.paused ? "ДАЛЬШЕ" : "ПАУЗА";
@@ -407,7 +405,6 @@ function selectGame(id) {
   app.activeId = id;
   document.body.dataset.activeGame = id;
   app.score = 0;
-  app.combo = 0;
   app.time = 0;
   app.metric = "";
   app.running = false;
@@ -431,7 +428,6 @@ function beginGame(id) {
   app.activeId = id;
   document.body.dataset.activeGame = id;
   app.score = 0;
-  app.combo = 0;
   app.time = Number(meta.duration || 35);
   app.metric = "";
   app.running = false;
@@ -488,7 +484,6 @@ function showMenu() {
   kindEl.textContent = "READY";
   app.score = 0;
   app.time = 0;
-  app.combo = 0;
   updateHud();
   renderMenu();
   if (location.hash) {
@@ -648,14 +643,12 @@ function makeSearchGame() {
       if (!app.running) return;
       if (rectHit(p, target)) {
         addTapFeedback(effects, target.x + target.w / 2, target.y + target.h / 2, "нашел", "#54e6a5");
-        app.score += 18 + round * 3 + app.combo * 2;
-        app.combo += 1;
+        app.score += 20;
         round += 1;
         newRound();
       } else {
         addTapFeedback(effects, p.x, p.y, "мимо", "#ff4f78", "cross");
         app.score = Math.max(0, app.score - 2);
-        app.combo = 0;
         missFlash = 0.22;
       }
     },
@@ -746,17 +739,14 @@ function makeWhackGame() {
       hammer = { x: p.x, y: p.y, t: 0.16 };
       if (!hit) {
         addTapFeedback(effects, p.x, p.y, "мимо", "#ff4f78", "cross");
-        app.combo = 0;
         return;
       }
       if (hit.kind === "eva") {
         addTapFeedback(effects, hit.x, hit.y - 50, "ошибка", "#ff4f78", "cross");
-        app.score = Math.max(0, app.score - 12);
-        app.combo = 0;
+        app.score = Math.max(0, app.score - 14);
       } else {
         addTapFeedback(effects, hit.x, hit.y - 50, "попал", "#54e6a5");
-        app.score += 7 + app.combo;
-        app.combo += 1;
+        app.score += 10;
       }
       hit.hit = 0.16;
       hit.state = "falling";
@@ -917,9 +907,8 @@ function makeBuildGame() {
           const keptStart = falling.cropStart + ((left - fallingLeft) / falling.w) * falling.cropWidth;
           const keptWidth = (overlap / falling.w) * falling.cropWidth;
           stack.push({ x: (left + right) / 2, y: targetY, w: overlap, h: blockH, img: falling.img, cropStart: keptStart, cropWidth: keptWidth });
-          app.score += Math.round(18 + overlap / 8);
-          app.combo = offset < 14 ? app.combo + 1 : 0;
-          if (offset < 14) app.score += 14;
+          app.score += Math.round(14 + overlap / 12);
+          if (offset < 14) app.score += 8;
           falling = null;
         }
       }
@@ -1028,22 +1017,19 @@ function makeRaceGame() {
         obj.y += roadSpeed * dt;
         if (rectsOverlap(carHit, objectRect(obj))) {
           if (obj.type === "coin") {
-            app.score += 18 + app.combo;
-            app.combo += 1;
+            app.score += 16;
             carFlash = 0.22;
             carFlashColor = "#54e6a5";
             addTapFeedback(effects, obj.x, obj.y + 32, "+монета", "#ffd84a");
           } else if (obj.type === "cake") {
-            app.score += 10 + app.combo;
-            app.combo += 1;
+            app.score += 10;
             cakeBoost = 4.2;
             speed = clamp(speed + 28, 250, 460);
             carFlash = 0.32;
             carFlashColor = "#ffd84a";
             addTapFeedback(effects, obj.x, obj.y + 32, "+скорость", "#ffd84a");
           } else {
-            app.score = Math.max(0, app.score - 9);
-            app.combo = 0;
+            app.score = Math.max(0, app.score - 10);
             speed = Math.max(220, speed - 55);
             carFlash = 0.28;
             carFlashColor = "#ff4f78";
@@ -1130,16 +1116,14 @@ function makeRowGame() {
     });
     if (best && bestDistance <= 54) {
       best.hit = true;
-      app.score += 10 + app.combo;
-      app.combo += 1;
-      distance += 34 + app.combo * 2;
+      app.score += 9;
+      distance += 38;
       speed = clamp(speed + 5, 250, 430);
       boatKick = 0.22;
       strokeFrame = 0.28;
       addTapFeedback(effects, hitX, best.y, "гребок", "#54e6a5");
     } else {
       app.score = Math.max(0, app.score - 3);
-      app.combo = 0;
       speed = Math.max(230, speed - 18);
       missFlash = 0.22;
       addTapFeedback(effects, hitX, H / 2, "мимо", "#ff4f78", "cross");
@@ -1169,7 +1153,6 @@ function makeRowGame() {
         beat.x -= speed * dt;
         if (!beat.hit && beat.x < hitX - 66) {
           beat.hit = true;
-          app.combo = 0;
           missFlash = 0.18;
           addTapFeedback(effects, hitX, beat.y, "поздно", "#ff4f78", "cross");
         }
@@ -1261,16 +1244,14 @@ function makeRowGameMobile() {
     });
     if (best && bestDistance <= 58) {
       best.hit = true;
-      app.score += 10 + app.combo;
-      app.combo += 1;
-      distance += 34 + app.combo * 2;
+      app.score += 9;
+      distance += 38;
       speed = clamp(speed + 5, 250, 430);
       boatKick = 0.22;
       strokeFrame = 0.28;
       addTapFeedback(effects, best.x, hitY, "гребок", "#54e6a5");
     } else {
       app.score = Math.max(0, app.score - 3);
-      app.combo = 0;
       speed = Math.max(230, speed - 18);
       missFlash = 0.22;
       addTapFeedback(effects, W / 2, hitY, "мимо", "#ff4f78", "cross");
@@ -1300,7 +1281,6 @@ function makeRowGameMobile() {
         beat.y += speed * dt;
         if (!beat.hit && beat.y > hitY + 68) {
           beat.hit = true;
-          app.combo = 0;
           missFlash = 0.18;
           addTapFeedback(effects, beat.x, hitY, "поздно", "#ff4f78", "cross");
         }
@@ -1514,7 +1494,6 @@ function makeMatchGame() {
       [grid[selected], grid[hit]] = [grid[hit], grid[selected]];
       if (!clearExisting(true)) {
         [grid[selected], grid[hit]] = [grid[hit], grid[selected]];
-        app.combo = 0;
       } else {
         needsShuffle = !hasPossibleMove();
       }
@@ -1525,8 +1504,7 @@ function makeMatchGame() {
         clearTimer = Math.max(0, clearTimer - dt);
         if (clearTimer === 0) {
           if (pendingScore) {
-            app.score += clearing.size * 7 + app.combo * 4;
-            app.combo += 1;
+            app.score += clearing.size * 7;
           }
           refill(clearing);
           clearing = new Set();
@@ -1602,9 +1580,8 @@ function makeTowerGame() {
           }
           const offset = Math.abs(falling.x - top.x);
           stack.push({ x: falling.x, y: targetY, w: overlap });
-          app.score += Math.round(16 + overlap / 9);
-          app.combo = offset < 12 ? app.combo + 1 : 0;
-          if (offset < 12) app.score += 12;
+          app.score += Math.round(14 + overlap / 12);
+          if (offset < 12) app.score += 8;
           falling = null;
           if (stack.length >= 13) finish("Башня готова");
         }
