@@ -262,7 +262,7 @@ function updateHud() {
     ["комбо", app.combo],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   totalScoreEl.textContent = totalScore();
-  pauseBtn.textContent = app.paused ? "дальше" : "пауза";
+  pauseBtn.textContent = app.paused ? "ДАЛЬШЕ" : "ПАУЗА";
 }
 
 function showOverlay(title, text) {
@@ -707,6 +707,7 @@ function makeWhackGame() {
     },
     draw() {
       drawBg("arcade");
+      drawImageFit(sprite("lenya_pose", 1), 22, 350, 122, 160, "bottom");
       drawPanel(150, 66, 660, 430, "rgba(9, 8, 20, 0.50)");
       holes.forEach((hole) => {
         ctx.fillStyle = "#0b0610";
@@ -761,6 +762,7 @@ function makeBuildGame() {
   let falling = null;
   let nextImg = choice(layers.filter((id) => id !== 0));
   let lost = false;
+  const missGrace = 10;
 
   function makeBlock(x, y, w) {
     return {
@@ -804,14 +806,17 @@ function makeBuildGame() {
           const fallingRight = falling.x + falling.w / 2;
           const topLeft = top.x - top.w / 2;
           const topRight = top.x + top.w / 2;
-          const left = Math.max(fallingLeft, topLeft);
-          const right = Math.min(fallingRight, topRight);
-          const overlap = Math.max(0, right - left);
-          if (overlap < 44) {
+          const rawLeft = Math.max(fallingLeft, topLeft);
+          const rawRight = Math.min(fallingRight, topRight);
+          const rawOverlap = Math.max(0, rawRight - rawLeft);
+          if (rawOverlap <= 0) {
             lost = true;
             finish("Стройка рухнула");
             return;
           }
+          const left = Math.max(fallingLeft, topLeft - missGrace);
+          const right = Math.min(fallingRight, topRight + missGrace);
+          const overlap = Math.max(14, Math.min(falling.w, right - left));
           const offset = Math.abs(falling.x - top.x);
           const keptStart = falling.cropStart + ((left - fallingLeft) / falling.w) * falling.cropWidth;
           const keptWidth = (overlap / falling.w) * falling.cropWidth;
@@ -859,10 +864,12 @@ function makeRaceGame() {
   let spawn = 0;
   let carFlash = 0;
   let carFlashColor = "#54e6a5";
+  let cakeBoost = 0;
   const objects = [];
   const effects = [];
   const coneIds = [17, 18, 19];
   const coinId = 52;
+  const cakeIds = [60, 63, 64, 65];
   const road = { x: 230, y: 0, w: 500, h: H };
 
   function setLane(dir) {
@@ -870,17 +877,18 @@ function makeRaceGame() {
   }
 
   function addObject() {
-    const collect = Math.random() < 0.42;
+    const roll = Math.random();
+    const type = roll < 0.42 ? "coin" : roll < 0.58 ? "cake" : "cone";
     const objectLane = Math.floor(Math.random() * 3);
     objects.push({
       lane: objectLane,
       x: lanes[objectLane],
       y: -78,
-      collect,
-      img: sprite("racing", collect ? coinId : choice(coneIds)),
-      size: collect ? 50 : 58,
-      hitW: collect ? 44 : 38,
-      hitH: collect ? 44 : 42,
+      type,
+      img: type === "coin" ? sprite("racing", coinId) : type === "cake" ? sprite("objects", choice(cakeIds)) : sprite("racing", choice(coneIds)),
+      size: type === "coin" ? 50 : type === "cake" ? 56 : 58,
+      hitW: type === "cone" ? 36 : 46,
+      hitH: type === "cone" ? 40 : 46,
     });
   }
 
@@ -901,26 +909,36 @@ function makeRaceGame() {
       if (key === "arrowright" || key === "d") setLane(1);
     },
     update(dt) {
-      distance += speed * dt;
+      const roadSpeed = speed + (cakeBoost > 0 ? 135 : 0);
+      distance += roadSpeed * dt;
       spawn -= dt;
       if (spawn <= 0) {
         addObject();
-        spawn = rand(0.56, 0.9);
+        spawn = rand(0.56, 0.9) * (cakeBoost > 0 ? 0.82 : 1);
       }
       speed = clamp(speed + dt * 10, 250, 420);
+      cakeBoost = Math.max(0, cakeBoost - dt);
       carFlash = Math.max(0, carFlash - dt);
       updateTapFeedback(effects, dt);
       const carHit = carRect();
       for (let i = objects.length - 1; i >= 0; i -= 1) {
         const obj = objects[i];
-        obj.y += speed * dt;
+        obj.y += roadSpeed * dt;
         if (rectsOverlap(carHit, objectRect(obj))) {
-          if (obj.collect) {
+          if (obj.type === "coin") {
             app.score += 18 + app.combo;
             app.combo += 1;
             carFlash = 0.22;
             carFlashColor = "#54e6a5";
             addTapFeedback(effects, obj.x, obj.y + 32, "+монета", "#ffd84a");
+          } else if (obj.type === "cake") {
+            app.score += 10 + app.combo;
+            app.combo += 1;
+            cakeBoost = 4.2;
+            speed = clamp(speed + 28, 250, 460);
+            carFlash = 0.32;
+            carFlashColor = "#ffd84a";
+            addTapFeedback(effects, obj.x, obj.y + 32, "+скорость", "#ffd84a");
           } else {
             app.score = Math.max(0, app.score - 9);
             app.combo = 0;
@@ -939,6 +957,7 @@ function makeRaceGame() {
       drawBg("race");
       ctx.fillStyle = "rgba(7, 9, 14, 0.34)";
       ctx.fillRect(0, 0, W, H);
+      drawImageFit(sprite("lenya_pose", 5), 34, 366, 118, 156, "bottom");
       ctx.fillStyle = "#252a31";
       ctx.fillRect(road.x, road.y, road.w, road.h);
       ctx.fillStyle = "#303640";
@@ -958,7 +977,7 @@ function makeRaceGame() {
       }
       objects.forEach((obj) => drawImageFit(obj.img, obj.x - obj.size / 2, obj.y, obj.size, obj.size));
       if (carFlash > 0) {
-        ctx.fillStyle = carFlashColor === "#ff4f78" ? "rgba(255,79,120,0.24)" : "rgba(84,230,165,0.22)";
+        ctx.fillStyle = carFlashColor === "#ff4f78" ? "rgba(255,79,120,0.24)" : carFlashColor === "#ffd84a" ? "rgba(255,216,74,0.24)" : "rgba(84,230,165,0.22)";
         ctx.fillRect(lanes[lane] - 58, H - 148, 116, 126);
       }
       drawImageFit(sprite("racing", 21), lanes[lane] - 52, H - 132, 104, 108, "bottom");
@@ -971,16 +990,18 @@ function makeRaceGame() {
 function makeRowGame() {
   app.time = 34;
   const hitX = 310;
-  const boatX = 268;
+  const boatX = 230;
   const boatY = 238;
   const beats = [];
   const effects = [];
   let spawn = 0.55;
   let water = 0;
   let boatKick = 0;
+  let strokeFrame = 0;
   let missFlash = 0;
   let speed = 250;
   let distance = 0;
+  let tempo = 0;
 
   function spawnBeat() {
     beats.push({
@@ -1008,8 +1029,9 @@ function makeRowGame() {
       app.score += 10 + app.combo;
       app.combo += 1;
       distance += 34 + app.combo * 2;
-      speed = clamp(speed + 8, 250, 360);
+      speed = clamp(speed + 5, 250, 430);
       boatKick = 0.22;
+      strokeFrame = 0.28;
       addTapFeedback(effects, hitX, best.y, "гребок", "#54e6a5");
     } else {
       app.score = Math.max(0, app.score - 3);
@@ -1029,12 +1051,14 @@ function makeRowGame() {
       if (key === "arrowright" || key === "d") press("right");
     },
     update(dt) {
+      tempo += dt;
+      speed = clamp(speed + dt * (8 + tempo * 0.18), 250, 450);
       water += speed * dt;
       distance += speed * dt * 0.035;
       spawn -= dt;
       if (spawn <= 0) {
         spawnBeat();
-        spawn = rand(0.56, 0.9);
+        spawn = rand(0.56, 0.9) * clamp(1 - tempo * 0.012, 0.66, 1);
       }
       for (let i = beats.length - 1; i >= 0; i -= 1) {
         const beat = beats[i];
@@ -1048,6 +1072,7 @@ function makeRowGame() {
         if (beat.x < -70 || beat.hit) beats.splice(i, 1);
       }
       boatKick = Math.max(0, boatKick - dt);
+      strokeFrame = Math.max(0, strokeFrame - dt);
       missFlash = Math.max(0, missFlash - dt);
       updateTapFeedback(effects, dt);
     },
@@ -1083,10 +1108,10 @@ function makeRowGame() {
         ctx.strokeStyle = "#fff6d7";
         ctx.lineWidth = 4;
         ctx.stroke();
-        drawText(beat.side === "left" ? "L" : "R", beat.x, beat.y - 15, 28, "#070710", "center");
+        drawText(beat.side === "left" ? "\u2190" : "\u2192", beat.x, beat.y - 17, 34, "#070710", "center");
       });
       const kick = boatKick > 0 ? Math.sin(boatKick * 44) * 13 + 18 : 0;
-      drawImageFit(sprite("rowing", boatKick > 0 ? 1 : 0), boatX + kick, boatY - 72, 248, 118);
+      drawImageFit(sprite("rowing", strokeFrame > 0 ? 1 : 0), boatX + kick, boatY - 72, 248, 118);
       if (missFlash > 0) {
         ctx.fillStyle = "rgba(255,79,120,0.22)";
         ctx.fillRect(0, 0, W, H);
@@ -1104,7 +1129,8 @@ function makeMatchGame() {
     "eva:9",
     "objects:0",
     "objects:60",
-    "match_items:0",
+    "construction:55",
+    "construction:41",
   ];
   const size = 5;
   const cell = 74;
@@ -1207,6 +1233,7 @@ function makeMatchGame() {
     },
     draw() {
       drawBg("arcade");
+      drawImageFit(sprite("lenya_pose", 9), 766, 350, 130, 164, "bottom");
       drawPanel(boardX - 18, boardY - 18, cell * size + 36, cell * size + 36, "rgba(10,8,22,0.82)");
       for (let i = 0; i < grid.length; i += 1) {
         const x = boardX + (i % size) * cell;
@@ -1218,7 +1245,6 @@ function makeMatchGame() {
         ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
         drawTile(grid[i], x + 10, y + 10, cell - 20, cell - 20);
       }
-      drawText("выбери две соседние плитки", W / 2, 494, 20, "#c9c0df", "center");
     },
   };
 }
