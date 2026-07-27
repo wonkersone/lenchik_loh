@@ -76,7 +76,7 @@ const games = [
     desc: "Бей Лёню, Еву с тортиком не трогай.",
     accent: "#ff4f78",
     icon: "lenya_face/lenya_face-04.png",
-    introImage: "eva/eva-09.png",
+    introImage: "eva/eva-03.png",
     rules: "Из лунок быстро выглядывают лица. Попадай по Лене и не трогай Еву с тортом.",
     desktop: "Наводи мышью и кликай по Лене.",
     mobile: "Бей по Лене быстрым тапом.",
@@ -102,7 +102,7 @@ const games = [
     desc: "Шашки 40",
     accent: "#ffd84a",
     icon: "lenya_face/lenya_face-17.png",
-    introImage: "racing/racing-21.png",
+    introImage: "lenya_pose/lenya_pose-05.png",
     rules: "Едь по полосам, собирай монеты и куски торта. Конусы сбивают темп, торт временно разгоняет машину.",
     desktop: "Управляй стрелками влево и вправо.",
     mobile: "Тапай по левой или правой половине экрана.",
@@ -128,7 +128,7 @@ const games = [
     desc: "Собирай одинаковые лица в ряд.",
     accent: "#f865b0",
     icon: "lenya_face/lenya_face-14.png",
-    introImage: "lenya_face/lenya_face-14.png",
+    introImage: "lenya_pose/lenya_pose-04.png",
     rules: "Меняй соседние плитки местами и собирай три одинаковые в ряд. Если ходов не осталось, игра предложит перемешать поле.",
     desktop: "Кликни одну плитку, потом соседнюю.",
     mobile: "Тапни одну плитку, потом соседнюю.",
@@ -1170,6 +1170,9 @@ function makeMatchGame() {
   let selected = null;
   let grid = [];
   let needsShuffle = false;
+  let clearing = new Set();
+  let clearTimer = 0;
+  let pendingScore = true;
   const shuffleButton = { x: W / 2 - 150, y: 458, w: 300, h: 48 };
 
   function makeGrid() {
@@ -1248,6 +1251,8 @@ function makeMatchGame() {
 
   function shuffleGrid() {
     selected = null;
+    clearing = new Set();
+    clearTimer = 0;
     grid = makeGrid();
     needsShuffle = !hasPossibleMove();
   }
@@ -1256,15 +1261,20 @@ function makeMatchGame() {
     cleared.forEach((i) => { grid[i] = choice(tiles); });
   }
 
+  function startClear(cleared, addScore = true) {
+    if (!cleared.size) return false;
+    clearing = new Set(cleared);
+    clearTimer = 0.24;
+    pendingScore = addScore;
+    selected = null;
+    needsShuffle = false;
+    return true;
+  }
+
   function clearExisting(addScore = true) {
     const m = matches();
     if (!m.size) return false;
-    if (addScore) {
-      app.score += m.size * 7 + app.combo * 4;
-      app.combo += 1;
-    }
-    refill(m);
-    return true;
+    return startClear(m, addScore);
   }
 
   function drawTile(tile, x, y, w, h) {
@@ -1276,6 +1286,7 @@ function makeMatchGame() {
 
   return {
     tap(p) {
+      if (clearTimer > 0) return;
       if (needsShuffle) {
         if (rectHit(p, shuffleButton)) shuffleGrid();
         return;
@@ -1299,19 +1310,42 @@ function makeMatchGame() {
       }
       selected = null;
     },
+    update(dt) {
+      if (clearTimer > 0) {
+        clearTimer = Math.max(0, clearTimer - dt);
+        if (clearTimer === 0) {
+          if (pendingScore) {
+            app.score += clearing.size * 7 + app.combo * 4;
+            app.combo += 1;
+          }
+          refill(clearing);
+          clearing = new Set();
+          if (!clearExisting(true)) needsShuffle = !hasPossibleMove();
+        }
+      } else if (!needsShuffle && !clearExisting(true)) {
+        needsShuffle = !hasPossibleMove();
+      }
+    },
     draw() {
       drawBg("arcade");
       drawImageFit(sprite("lenya_pose", 9), 766, 350, 130, 164, "bottom");
       drawPanel(boardX - 18, boardY - 18, cell * size + 36, cell * size + 36, "rgba(10,8,22,0.82)");
+      const clearPulse = clearTimer > 0 ? 0.65 + Math.sin(clearTimer * 42) * 0.18 : 1;
       for (let i = 0; i < grid.length; i += 1) {
         const x = boardX + (i % size) * cell;
         const y = boardY + Math.floor(i / size) * cell;
-        ctx.fillStyle = selected === i ? "#ffd84a" : "#211c39";
+        const isClearing = clearing.has(i);
+        ctx.fillStyle = isClearing ? "#54e6a5" : selected === i ? "#ffd84a" : "#211c39";
         ctx.fillRect(x + 4, y + 4, cell - 8, cell - 8);
         ctx.strokeStyle = "#fff6d7";
         ctx.lineWidth = 3;
         ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
-        drawTile(grid[i], x + 10, y + 10, cell - 20, cell - 20);
+        if (isClearing) {
+          ctx.fillStyle = "rgba(255,255,255,0.24)";
+          ctx.fillRect(x + 8, y + 8, cell - 16, cell - 16);
+        }
+        const inset = isClearing ? 10 + (1 - clearPulse) * 18 : 10;
+        drawTile(grid[i], x + inset, y + inset, cell - inset * 2, cell - inset * 2);
       }
       if (needsShuffle) {
         drawPanel(shuffleButton.x, shuffleButton.y, shuffleButton.w, shuffleButton.h, "rgba(255,216,74,0.94)");
