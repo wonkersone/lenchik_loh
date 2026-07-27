@@ -44,14 +44,6 @@ const bgFiles = {
   arcade: "assets/backgrounds/crops/arcade.png",
 };
 
-const mobileBgFiles = {
-  school: "assets/backgrounds/mobile/school.png",
-  build: "assets/backgrounds/mobile/build.png",
-  race: "assets/backgrounds/mobile/race.png",
-  river: "assets/backgrounds/mobile/river.png",
-  arcade: "assets/backgrounds/mobile/arcade.png",
-};
-
 const neededSprites = {
   lenya_pose: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
   eva: [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
@@ -199,8 +191,7 @@ function circleHit(p, c) {
 }
 
 function drawBg(name) {
-  const file = isPhoneViewport() ? mobileBgFiles[name] : bgFiles[name];
-  const cropped = img(file) || img(bgFiles[name]);
+  const cropped = img(bgFiles[name]);
   if (cropped) {
     ctx.drawImage(cropped, 0, 0, W, H);
   } else {
@@ -333,6 +324,8 @@ function showPauseOverlay() {
 function showGameIntro(meta) {
   restartBtn.hidden = true;
   pauseBtn.hidden = true;
+  document.body.classList.add("is-intro");
+  document.body.dataset.activeGame = meta.id;
   const imagePath = meta.introImage ? `assets/sprites/${meta.introImage}` : `assets/sprites/${meta.icon}`;
   overlay.classList.remove("is-hidden");
   overlay.innerHTML = `
@@ -354,6 +347,7 @@ function showGameIntro(meta) {
 }
 
 function hideOverlay() {
+  document.body.classList.remove("is-intro");
   overlay.classList.add("is-hidden");
   overlay.innerHTML = "";
 }
@@ -361,6 +355,7 @@ function hideOverlay() {
 function finish(message) {
   app.running = false;
   app.paused = false;
+  document.body.classList.remove("is-intro");
   document.body.classList.remove("is-playing");
   pauseBtn.hidden = true;
   const roundScore = Math.max(0, Math.round(app.score));
@@ -381,6 +376,7 @@ function selectGame(id) {
     history.replaceState(null, "", `#${id}`);
   }
   app.activeId = id;
+  document.body.dataset.activeGame = id;
   app.score = 0;
   app.combo = 0;
   app.time = 0;
@@ -402,6 +398,7 @@ function beginGame(id) {
   const meta = games.find((game) => game.id === id);
   if (!meta) return;
   app.activeId = id;
+  document.body.dataset.activeGame = id;
   app.score = 0;
   app.combo = 0;
   app.time = Number(meta.duration || 35);
@@ -446,7 +443,9 @@ function togglePause() {
 function showMenu() {
   app.running = false;
   app.paused = false;
+  document.body.classList.remove("is-intro");
   document.body.classList.remove("is-playing");
+  delete document.body.dataset.activeGame;
   restartBtn.hidden = true;
   pauseBtn.hidden = true;
   app.game = makeAttractGame();
@@ -1448,7 +1447,7 @@ function makeTowerGame() {
 
 async function loadAssets() {
   const manifest = await fetch("assets/sprites/manifest.json").then((r) => r.json());
-  const paths = [...Object.values(isPhoneViewport() ? mobileBgFiles : bgFiles)];
+  const paths = [...Object.values(bgFiles)];
   Object.entries(neededSprites).forEach(([group, indexes]) => {
     app.sprites[group] = [];
     indexes.forEach((index) => {

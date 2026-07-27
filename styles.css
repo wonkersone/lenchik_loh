@@ -613,20 +613,43 @@ canvas {
   }
 
   .canvas-frame {
-    width: min(100%, max(304px, calc(100dvh - 300px)));
-    min-height: 0;
-    aspect-ratio: 1;
+    width: min(100%, 430px);
+    min-height: 650px;
+    aspect-ratio: 9 / 14;
     margin: 0 auto;
     border-width: 3px;
+    background-position: center;
+    background-size: cover;
   }
 
   canvas {
     width: 100%;
     max-width: none;
-    height: 100%;
+    height: auto;
     max-height: none;
     min-height: 0;
-    object-fit: fill;
+    object-fit: contain;
+  }
+
+  body[data-active-game="search"] .canvas-frame {
+    background-image: url("assets/backgrounds/mobile-stage/school.png");
+  }
+
+  body[data-active-game="whack"] .canvas-frame,
+  body[data-active-game="match"] .canvas-frame {
+    background-image: url("assets/backgrounds/mobile-stage/arcade-new.png");
+  }
+
+  body[data-active-game="build"] .canvas-frame {
+    background-image: url("assets/backgrounds/mobile-stage/build.png");
+  }
+
+  body[data-active-game="race"] .canvas-frame {
+    background-image: url("assets/backgrounds/mobile-stage/race.png");
+  }
+
+  body[data-active-game="row"] .canvas-frame {
+    background-image: url("assets/backgrounds/mobile-stage/river.png");
   }
 
   body.is-playing .shell {
@@ -720,14 +743,22 @@ canvas {
   }
 
   body.is-playing .canvas-frame {
-    width: min(calc(100vw - 12px), max(304px, calc(100dvh - 226px)));
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: min(calc(100vw - 28px), 430px);
+    min-height: min(92dvh, 760px);
+    aspect-ratio: 9 / 14;
     margin: 0 auto;
+    padding: 124px 10px 22px;
     box-shadow: 5px 5px 0 var(--shadow);
   }
 
   body.is-playing canvas {
     width: 100%;
-    height: 100%;
+    height: auto;
+    border: 3px solid var(--ink);
+    box-shadow: 5px 5px 0 rgba(3, 3, 9, 0.75);
   }
 
   .intro-card {
@@ -746,8 +777,25 @@ canvas {
   }
 
   .overlay {
-    padding: 10px;
-    overflow: hidden;
+    padding: 12px;
+    overflow: visible;
+  }
+
+  body.is-intro .canvas-frame {
+    min-height: calc(100dvh - 126px);
+    aspect-ratio: auto;
+    padding: 132px 12px 28px;
+    overflow: visible;
+  }
+
+  body.is-intro canvas {
+    display: none;
+  }
+
+  body.is-intro .overlay {
+    position: static;
+    display: block;
+    padding: 0;
   }
 
   .overlay-card {
@@ -774,7 +822,7 @@ canvas {
   }
 
   .intro-card img {
-    max-height: 92px;
+    max-height: 132px;
   }
 
   .intro-card button {
