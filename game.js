@@ -191,10 +191,7 @@ function syncCanvasSize() {
 }
 
 function isMobileGameField() {
-  return isPhoneViewport() && (
-    document.body.classList.contains("is-playing")
-    || document.body.classList.contains("is-ended")
-  );
+  return isPhoneViewport();
 }
 
 function rectHit(p, r) {

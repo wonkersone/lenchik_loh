@@ -466,7 +466,15 @@ canvas {
 }
 
 @media (max-width: 620px) {
+  body {
+    background:
+      linear-gradient(rgba(7, 7, 16, 0.74), rgba(7, 7, 16, 0.86)),
+      url("assets/backgrounds/mobile-stage/arcade-new.png") center top / cover fixed,
+      var(--bg);
+  }
+
   .shell {
+    width: min(100%, 430px);
     padding: max(6px, env(safe-area-inset-top)) 8px max(10px, env(safe-area-inset-bottom));
   }
 
@@ -485,15 +493,21 @@ canvas {
 
   .topbar {
     align-items: center;
-    flex-direction: row;
+    flex-direction: column;
     margin-bottom: 8px;
     border-width: 3px;
+    text-align: center;
+  }
+
+  .topbar > div {
+    width: 100%;
   }
 
   .scorebox {
+    width: 100%;
     min-width: 92px;
     padding: 7px 9px;
-    text-align: left;
+    text-align: center;
   }
 
   .scorebox span {
@@ -508,6 +522,8 @@ canvas {
     border-width: 3px;
     gap: 8px;
     padding: 8px;
+    width: 100%;
+    overflow: hidden;
   }
 
   .menu-head {
@@ -533,24 +549,21 @@ canvas {
   }
 
   .game-menu {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 8px;
-    overflow-x: auto;
+    overflow: visible;
     padding: 0 2px 10px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: thin;
   }
 
   .game-card {
-    flex: 0 0 238px;
-    width: 238px;
+    width: 100%;
     height: 106px;
     min-height: 106px;
     grid-template-columns: 62px minmax(0, 1fr);
     gap: 10px;
     padding: 8px 10px;
     overflow: hidden;
-    scroll-snap-align: start;
   }
 
   .game-card img {
@@ -618,6 +631,7 @@ canvas {
     aspect-ratio: 9 / 14;
     margin: 0 auto;
     border-width: 3px;
+    background-image: url("assets/backgrounds/mobile-stage/arcade-new.png");
     background-position: center;
     background-size: cover;
   }
@@ -645,7 +659,7 @@ canvas {
   }
 
   body[data-active-game="race"] .canvas-frame {
-    background-image: url("assets/backgrounds/mobile-stage/arcade-new.png");
+    background-image: url("assets/backgrounds/mobile-stage/race.png");
   }
 
   body[data-active-game="row"] .canvas-frame {
@@ -666,6 +680,7 @@ canvas {
 
   body.is-playing .topbar,
   body.is-ended .topbar {
+    flex-direction: row;
     margin-bottom: 6px;
     padding: 6px 8px;
     box-shadow: 5px 5px 0 var(--shadow);
@@ -699,6 +714,10 @@ canvas {
 
   body.is-playing .game-menu,
   body.is-ended .game-menu {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
     gap: 6px;
     padding-bottom: 6px;
   }
