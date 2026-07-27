@@ -67,6 +67,7 @@ const games = [
     rules: "На поле спрятан ровно один рюкзак. Каждый раунд он другого цвета, а вокруг становится больше лишних вещей.",
     desktop: "Кликай по рюкзаку мышью.",
     mobile: "Касайся найденного рюкзака пальцем.",
+    duration: 42,
     make: makeSearchGame,
   },
   {
@@ -80,6 +81,7 @@ const games = [
     rules: "Из лунок быстро выглядывают лица. Попадай по Лене и не трогай Еву с тортом.",
     desktop: "Наводи мышью и кликай по Лене.",
     mobile: "Бей по Лене быстрым тапом.",
+    duration: 30,
     make: makeWhackGame,
   },
   {
@@ -93,6 +95,7 @@ const games = [
     rules: "Строй башню из этажей. Блок должен хотя бы краем попасть на предыдущий, а ровные попадания дают больше очков.",
     desktop: "Нажимай пробел или Enter, когда этаж над башней.",
     mobile: "Тапай по экрану в момент, когда этаж над башней.",
+    duration: 40,
     make: makeBuildGame,
   },
   {
@@ -106,6 +109,7 @@ const games = [
     rules: "Едь по полосам, собирай монеты и куски торта. Конусы сбивают темп, торт временно разгоняет машину.",
     desktop: "Управляй стрелками влево и вправо.",
     mobile: "Тапай по левой или правой половине экрана.",
+    duration: 36,
     make: makeRaceGame,
   },
   {
@@ -119,6 +123,7 @@ const games = [
     rules: "Лови стрелки у желтой линии. Чем дольше держишь ритм, тем быстрее идет гонка.",
     desktop: "Нажимай стрелку влево или вправо, когда значок дошел до линии.",
     mobile: "Тапай слева или справа, когда значок дошел до линии.",
+    duration: 34,
     make: makeRowGame,
   },
   {
@@ -132,6 +137,7 @@ const games = [
     rules: "Меняй соседние плитки местами и собирай три одинаковые в ряд. Если ходов не осталось, игра предложит перемешать поле.",
     desktop: "Кликни одну плитку, потом соседнюю.",
     mobile: "Тапни одну плитку, потом соседнюю.",
+    duration: 45,
     make: makeMatchGame,
   },
 ];
@@ -386,14 +392,16 @@ function beginGame(id) {
   app.activeId = id;
   app.score = 0;
   app.combo = 0;
-  app.time = 35;
+  app.time = Number(meta.duration || 35);
   app.metric = "";
-  app.running = true;
+  app.running = false;
   app.paused = false;
   restartBtn.hidden = false;
   pauseBtn.hidden = false;
   app.lastTime = performance.now();
   app.game = meta.make();
+  app.time = Number(meta.duration || app.time || 35);
+  app.running = true;
   titleEl.textContent = meta.title;
   kindEl.textContent = meta.kind;
   hideOverlay();
@@ -556,7 +564,6 @@ function makeGamePreview(meta) {
 }
 
 function makeSearchGame() {
-  app.time = 42;
   let round = 1;
   let target = null;
   let decoys = [];
@@ -630,7 +637,6 @@ function makeSearchGame() {
 }
 
 function makeWhackGame() {
-  app.time = 30;
   const holes = [];
   const faces = app.sprites.lenya_face
     .map((item, index) => (item ? index : null))
@@ -782,7 +788,6 @@ function makeWhackGame() {
 }
 
 function makeBuildGame() {
-  app.time = 40;
   const layers = app.sprites.building_layers
     .map((item, index) => (item ? index : null))
     .filter((index) => index !== null);
@@ -887,7 +892,6 @@ function makeBuildGame() {
 }
 
 function makeRaceGame() {
-  app.time = 36;
   const lanes = [330, 480, 630];
   let lane = 1;
   let distance = 0;
@@ -1019,7 +1023,6 @@ function makeRaceGame() {
 }
 
 function makeRowGame() {
-  app.time = 34;
   const hitX = 310;
   const boatX = 230;
   const boatY = 238;
@@ -1154,7 +1157,6 @@ function makeRowGame() {
 }
 
 function makeMatchGame() {
-  app.time = 45;
   const tiles = [
     "lenya_face:4",
     "eva:9",
@@ -1356,7 +1358,6 @@ function makeMatchGame() {
 }
 
 function makeTowerGame() {
-  app.time = 38;
   const stack = [{ x: W / 2, y: H - 44, w: 220 }];
   let swing = 0;
   let falling = null;
