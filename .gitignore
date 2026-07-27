@@ -3,3 +3,4 @@ test-results/
 assets/sprite-candidates/
 .idea/
 tmp-*.png
+tmp-mobile-check/

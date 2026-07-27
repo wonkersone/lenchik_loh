@@ -645,55 +645,66 @@ canvas {
   }
 
   body[data-active-game="race"] .canvas-frame {
-    background-image: url("assets/backgrounds/mobile-stage/race.png");
+    background-image: url("assets/backgrounds/mobile-stage/arcade-new.png");
   }
 
   body[data-active-game="row"] .canvas-frame {
     background-image: url("assets/backgrounds/mobile-stage/river.png");
   }
 
-  body.is-playing .shell {
+  body.is-playing .shell,
+  body.is-ended .shell {
     padding: max(4px, env(safe-area-inset-top)) 6px max(8px, env(safe-area-inset-bottom));
   }
 
   body.is-playing .stage-head h2,
-  body.is-playing .stage-head .kicker {
+  body.is-playing .stage-head .kicker,
+  body.is-ended .stage-head h2,
+  body.is-ended .stage-head .kicker {
     display: none;
   }
 
-  body.is-playing .topbar {
+  body.is-playing .topbar,
+  body.is-ended .topbar {
     margin-bottom: 6px;
     padding: 6px 8px;
     box-shadow: 5px 5px 0 var(--shadow);
   }
 
   body.is-playing .topbar .kicker,
-  body.is-playing .scorebox {
+  body.is-playing .scorebox,
+  body.is-ended .topbar .kicker,
+  body.is-ended .scorebox {
     display: none;
   }
 
-  body.is-playing h1 {
+  body.is-playing h1,
+  body.is-ended h1 {
     font-size: clamp(1rem, 5.7vw, 1.35rem);
     text-shadow: 2px 2px 0 var(--pink), 4px 4px 0 var(--shadow);
   }
 
-  body.is-playing .cabinet {
+  body.is-playing .cabinet,
+  body.is-ended .cabinet {
     gap: 6px;
     padding: 6px;
     border-width: 2px;
     box-shadow: 4px 4px 0 var(--shadow);
   }
 
-  body.is-playing .menu-head {
+  body.is-playing .menu-head,
+  body.is-ended .menu-head {
     display: none;
   }
 
-  body.is-playing .game-menu {
+  body.is-playing .game-menu,
+  body.is-ended .game-menu {
     gap: 6px;
     padding-bottom: 6px;
   }
 
-  body.is-playing .game-card {
+  body.is-playing .game-card,
+  body.is-ended .game-card {
     flex-basis: 118px;
     width: 118px;
     height: 58px;
@@ -705,44 +716,52 @@ canvas {
     box-shadow: 3px 3px 0 var(--shadow);
   }
 
-  body.is-playing .game-card img {
+  body.is-playing .game-card img,
+  body.is-ended .game-card img {
     width: 34px;
     height: 34px;
   }
 
-  body.is-playing .game-card strong {
+  body.is-playing .game-card strong,
+  body.is-ended .game-card strong {
     font-size: 0.64rem;
     line-height: 1.08;
   }
 
-  body.is-playing .game-card small {
+  body.is-playing .game-card small,
+  body.is-ended .game-card small {
     display: none;
   }
 
-  body.is-playing .stage-head {
+  body.is-playing .stage-head,
+  body.is-ended .stage-head {
     margin-bottom: 6px;
     padding: 6px;
     box-shadow: 4px 4px 0 var(--shadow);
   }
 
-  body.is-playing .hud-wrap {
+  body.is-playing .hud-wrap,
+  body.is-ended .hud-wrap {
     grid-template-columns: minmax(0, 1fr) 64px;
     gap: 6px;
   }
 
-  body.is-playing .hud div {
+  body.is-playing .hud div,
+  body.is-ended .hud div {
     border-width: 2px;
     padding: 5px 6px;
   }
 
-  body.is-playing .hud-action {
+  body.is-playing .hud-action,
+  body.is-ended .hud-action {
     min-height: 36px;
     border-width: 3px;
     padding-inline: 6px;
     font-size: 0.68rem;
   }
 
-  body.is-playing .canvas-frame {
+  body.is-playing .canvas-frame,
+  body.is-ended .canvas-frame {
     width: min(calc(100vw - 28px), 430px);
     min-height: min(92dvh, 760px);
     aspect-ratio: 9 / 14;
@@ -751,7 +770,8 @@ canvas {
     box-shadow: 5px 5px 0 var(--shadow);
   }
 
-  body.is-playing canvas {
+  body.is-playing canvas,
+  body.is-ended canvas {
     width: 100%;
     height: 100%;
     border: 0;

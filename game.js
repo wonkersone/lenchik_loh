@@ -192,7 +192,10 @@ function syncCanvasSize() {
 }
 
 function isMobileGameField() {
-  return isPhoneViewport() && document.body.classList.contains("is-playing");
+  return isPhoneViewport() && (
+    document.body.classList.contains("is-playing")
+    || document.body.classList.contains("is-ended")
+  );
 }
 
 function rectHit(p, r) {
@@ -348,6 +351,7 @@ function showGameIntro(meta) {
   restartBtn.hidden = true;
   pauseBtn.hidden = true;
   document.body.classList.add("is-intro");
+  document.body.classList.remove("is-ended");
   document.body.dataset.activeGame = meta.id;
   const imagePath = meta.introImage ? `assets/sprites/${meta.introImage}` : `assets/sprites/${meta.icon}`;
   overlay.classList.remove("is-hidden");
@@ -380,6 +384,7 @@ function finish(message) {
   app.paused = false;
   document.body.classList.remove("is-intro");
   document.body.classList.remove("is-playing");
+  document.body.classList.add("is-ended");
   pauseBtn.hidden = true;
   const roundScore = Math.max(0, Math.round(app.score));
   if (app.activeId) {
@@ -408,6 +413,7 @@ function selectGame(id) {
   app.running = false;
   app.paused = false;
   document.body.classList.remove("is-playing");
+  document.body.classList.remove("is-ended");
   restartBtn.hidden = true;
   pauseBtn.hidden = true;
   app.game = makeGamePreview(meta);
@@ -437,6 +443,7 @@ function beginGame(id) {
   app.time = Number(meta.duration || app.time || 35);
   app.running = true;
   document.body.classList.add("is-playing");
+  document.body.classList.remove("is-ended");
   titleEl.textContent = meta.title;
   kindEl.textContent = meta.kind;
   hideOverlay();
@@ -471,6 +478,7 @@ function showMenu() {
   app.paused = false;
   document.body.classList.remove("is-intro");
   document.body.classList.remove("is-playing");
+  document.body.classList.remove("is-ended");
   delete document.body.dataset.activeGame;
   restartBtn.hidden = true;
   pauseBtn.hidden = true;
@@ -609,11 +617,14 @@ function makeSearchGame() {
   const objectIds = [12, 13, 18, 21, 22, 60, 63, 64, 65, 66];
 
   function newRound() {
-    const sideSafe = isPhoneViewport() ? 190 : 35;
+    const mobile = isPhoneViewport();
+    const sideSafe = mobile ? 24 : 35;
+    const topSafe = mobile ? 118 : 104;
+    const bottomSafe = mobile ? 72 : 86;
     decoys = Array.from({ length: 64 + round * 3 }, () => ({
       img: sprite("objects", choice(objectIds)),
       x: rand(sideSafe, W - sideSafe - 70),
-      y: rand(104, H - 86),
+      y: rand(topSafe, H - bottomSafe),
       w: rand(34, 78),
       h: rand(30, 72),
       rot: rand(-0.18, 0.18),
@@ -621,8 +632,8 @@ function makeSearchGame() {
     }));
     target = {
       img: sprite("objects", choice(backpackIds)),
-      x: rand(sideSafe + 18, W - sideSafe - 92),
-      y: rand(128, H - 112),
+      x: rand(sideSafe + 12, W - sideSafe - 92),
+      y: rand(topSafe + 12, H - bottomSafe - 40),
       w: 72,
       h: 68,
       label: "рюкзак",
@@ -784,6 +795,7 @@ function makeWhackGame() {
     draw() {
       drawBg("arcade");
       if (mobile) {
+        drawPanel(45, 176, 540, 540, "rgba(9, 8, 20, 0.54)");
         drawImageFit(sprite("lenya_pose", 1), 22, H - 230, 118, 190, "bottom");
       } else {
         drawImageFit(sprite("lenya_pose", 1), 22, 350, 122, 160, "bottom");
@@ -843,6 +855,10 @@ function makeBuildGame() {
   let nextImg = choice(layers.filter((id) => id !== 0));
   let lost = false;
   const missGrace = 10;
+  const mobile = isPhoneViewport();
+  const craneY = mobile ? 190 : 84;
+  const craneHeadY = mobile ? 164 : 58;
+  const craneHookY = mobile ? 172 : 66;
 
   function makeBlock(x, y, w) {
     return {
@@ -861,7 +877,7 @@ function makeBuildGame() {
     if (falling || lost) return;
     const top = stack[stack.length - 1];
     const movingX = W / 2 + Math.sin(swing) * 300;
-    falling = makeBlock(movingX, 84 - cameraY, Math.max(84, top.w - 8));
+    falling = makeBlock(movingX, craneY - cameraY, Math.max(84, top.w - 8));
     nextImg = choice(layers);
   }
 
@@ -917,11 +933,11 @@ function makeBuildGame() {
       ctx.translate(0, cameraY);
       const movingX = W / 2 + Math.sin(swing) * 300;
       ctx.fillStyle = "#2a1a12";
-      ctx.fillRect(movingX - 26, 58 - cameraY, 52, 12);
+      ctx.fillRect(movingX - 26, craneHeadY - cameraY, 52, 12);
       ctx.fillStyle = "#ff9f43";
-      ctx.fillRect(movingX - 18, 66 - cameraY, 36, 10);
+      ctx.fillRect(movingX - 18, craneHookY - cameraY, 36, 10);
       if (!falling) {
-        drawLayerBlock({ x: movingX, y: 84 - cameraY, w: Math.max(84, stack[stack.length - 1].w - 8), h: blockH, img: nextImg, cropStart: 0, cropWidth: 1 });
+        drawLayerBlock({ x: movingX, y: craneY - cameraY, w: Math.max(84, stack[stack.length - 1].w - 8), h: blockH, img: nextImg, cropStart: 0, cropWidth: 1 });
       }
       stack.forEach((block, i) => {
         drawLayerBlock(block);
@@ -1046,13 +1062,13 @@ function makeRaceGame() {
         ctx.fillRect(0, 0, W, H);
         drawImageFit(sprite("lenya_pose", 5), 34, 366, 118, 156, "bottom");
       }
-      ctx.fillStyle = mobile ? "rgba(24, 28, 36, 0.76)" : "#252a31";
+      ctx.fillStyle = mobile ? "#20242b" : "#252a31";
       ctx.fillRect(road.x, road.y, road.w, road.h);
-      ctx.fillStyle = mobile ? "rgba(57, 64, 76, 0.52)" : "#303640";
+      ctx.fillStyle = mobile ? "#303844" : "#303640";
       for (let y = -48 + (distance % 96); y < H; y += 96) {
         ctx.fillRect(road.x, y, road.w, mobile ? 34 : 42);
       }
-      ctx.fillStyle = mobile ? "rgba(8, 9, 13, 0.86)" : "#171a20";
+      ctx.fillStyle = mobile ? "#11141a" : "#171a20";
       ctx.fillRect(road.x - 18, 0, mobile ? 18 : 26, H);
       ctx.fillRect(road.x + road.w, 0, mobile ? 18 : 26, H);
       ctx.fillStyle = "#ffd84a";
@@ -1352,16 +1368,22 @@ function makeMatchGame() {
     "construction:41",
   ];
   const size = 5;
-  const cell = 74;
+  const mobile = isPhoneViewport();
+  const cell = mobile ? Math.floor((W - 54) / size) : 74;
   const boardX = Math.round((W - cell * size) / 2);
-  const boardY = 78;
+  const boardY = mobile ? Math.round((H - cell * size) / 2) : 78;
   let selected = null;
   let grid = [];
   let needsShuffle = false;
   let clearing = new Set();
   let clearTimer = 0;
   let pendingScore = true;
-  const shuffleButton = { x: W / 2 - 150, y: 458, w: 300, h: 48 };
+  const shuffleButton = {
+    x: W / 2 - 150,
+    y: mobile ? Math.min(H - 82, boardY + cell * size + 28) : 458,
+    w: 300,
+    h: 48,
+  };
 
   function makeGrid() {
     for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -1516,7 +1538,9 @@ function makeMatchGame() {
     },
     draw() {
       drawBg("arcade");
-      drawImageFit(sprite("lenya_pose", 9), 766, 350, 130, 164, "bottom");
+      if (!mobile) {
+        drawImageFit(sprite("lenya_pose", 9), 766, 350, 130, 164, "bottom");
+      }
       drawPanel(boardX - 18, boardY - 18, cell * size + 36, cell * size + 36, "rgba(10,8,22,0.82)");
       const clearPulse = clearTimer > 0 ? 0.65 + Math.sin(clearTimer * 42) * 0.18 : 1;
       for (let i = 0; i < grid.length; i += 1) {
