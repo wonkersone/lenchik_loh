@@ -44,6 +44,14 @@ const bgFiles = {
   arcade: "assets/backgrounds/crops/arcade.png",
 };
 
+const mobileBgFiles = {
+  school: "assets/backgrounds/mobile/school.png",
+  build: "assets/backgrounds/mobile/build.png",
+  race: "assets/backgrounds/mobile/race.png",
+  river: "assets/backgrounds/mobile/river.png",
+  arcade: "assets/backgrounds/mobile/arcade.png",
+};
+
 const neededSprites = {
   lenya_pose: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
   eva: [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
@@ -191,7 +199,8 @@ function circleHit(p, c) {
 }
 
 function drawBg(name) {
-  const cropped = img(bgFiles[name]);
+  const file = isPhoneViewport() ? mobileBgFiles[name] : bgFiles[name];
+  const cropped = img(file) || img(bgFiles[name]);
   if (cropped) {
     ctx.drawImage(cropped, 0, 0, W, H);
   } else {
@@ -387,9 +396,6 @@ function selectGame(id) {
   updateHud();
   renderMenu();
   showGameIntro(meta);
-  if (window.innerWidth <= 980) {
-    setTimeout(() => document.querySelector(".stage-wrap").scrollIntoView({ block: "start" }), 40);
-  }
 }
 
 function beginGame(id) {
@@ -414,9 +420,6 @@ function beginGame(id) {
   hideOverlay();
   updateHud();
   renderMenu();
-  if (window.innerWidth <= 980) {
-    setTimeout(() => document.querySelector(".stage-wrap").scrollIntoView({ block: "start" }), 40);
-  }
 }
 
 function restartGame() {
@@ -1445,7 +1448,7 @@ function makeTowerGame() {
 
 async function loadAssets() {
   const manifest = await fetch("assets/sprites/manifest.json").then((r) => r.json());
-  const paths = [...Object.values(bgFiles)];
+  const paths = [...Object.values(isPhoneViewport() ? mobileBgFiles : bgFiles)];
   Object.entries(neededSprites).forEach(([group, indexes]) => {
     app.sprites[group] = [];
     indexes.forEach((index) => {
