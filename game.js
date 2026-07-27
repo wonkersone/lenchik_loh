@@ -36,20 +36,23 @@ const app = {
   keys: new Set(),
 };
 
-const bgRects = {
-  school: [0, 0, 768, 341],
-  build: [768, 0, 768, 341],
-  race: [0, 341, 768, 341],
-  river: [768, 341, 768, 341],
-  arcade: [768, 682, 768, 342],
-};
-
 const bgFiles = {
   school: "assets/backgrounds/crops/school.png",
   build: "assets/backgrounds/crops/build.png",
   race: "assets/backgrounds/crops/race.png",
   river: "assets/backgrounds/crops/river.png",
   arcade: "assets/backgrounds/crops/arcade.png",
+};
+
+const neededSprites = {
+  lenya_pose: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  eva: [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+  lenya_face: [0, 1, 2, 3, 4, 7, 9, 10, 12, 14, 15, 16, 17, 18, 19, 21, 22, 23],
+  objects: [0, 1, 2, 3, 4, 5, 12, 13, 18, 21, 22, 60, 63, 64, 65, 66],
+  racing: [17, 18, 19, 21, 52],
+  construction: [41, 55],
+  building_layers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  rowing: [0, 1, 2],
 };
 
 const games = [
@@ -61,7 +64,9 @@ const games = [
     accent: "#43b6ff",
     icon: "lenya_face/lenya_face-23.png",
     introImage: "lenya_pose/lenya_pose-08.png",
-    rules: "На экране куча школьных вещей. Среди них ровно один рюкзак. Найди его до звонка: каждый раз цвет рюкзака меняется.",
+    rules: "На поле спрятан ровно один рюкзак. Каждый раунд он другого цвета, а вокруг становится больше лишних вещей.",
+    desktop: "Кликай по рюкзаку мышью.",
+    mobile: "Касайся найденного рюкзака пальцем.",
     make: makeSearchGame,
   },
   {
@@ -72,7 +77,9 @@ const games = [
     accent: "#ff4f78",
     icon: "lenya_face/lenya_face-04.png",
     introImage: "eva/eva-09.png",
-    rules: "Леня и Ева выскакивают из лунок. Бей только Леню. Если ударишь Еву с тортом, счет падает.",
+    rules: "Из лунок быстро выглядывают лица. Попадай по Лене и не трогай Еву с тортом.",
+    desktop: "Наводи мышью и кликай по Лене.",
+    mobile: "Бей по Лене быстрым тапом.",
     make: makeWhackGame,
   },
   {
@@ -83,7 +90,9 @@ const games = [
     accent: "#ff9f43",
     icon: "lenya_face/lenya_face-16.png",
     introImage: "lenya_pose/lenya_pose-02.png",
-    rules: "Тапай, когда материал ровно над башней. Чем точнее кладешь блоки, тем выше стройка и больше очков.",
+    rules: "Строй башню из этажей. Блок должен хотя бы краем попасть на предыдущий, а ровные попадания дают больше очков.",
+    desktop: "Нажимай пробел или Enter, когда этаж над башней.",
+    mobile: "Тапай по экрану в момент, когда этаж над башней.",
     make: makeBuildGame,
   },
   {
@@ -94,7 +103,9 @@ const games = [
     accent: "#ffd84a",
     icon: "lenya_face/lenya_face-17.png",
     introImage: "racing/racing-21.png",
-    rules: "Тапай слева или справа, меняй полосу, объезжай конусы и собирай бонусы.",
+    rules: "Едь по полосам, собирай монеты и куски торта. Конусы сбивают темп, торт временно разгоняет машину.",
+    desktop: "Управляй стрелками влево и вправо.",
+    mobile: "Тапай по левой или правой половине экрана.",
     make: makeRaceGame,
   },
   {
@@ -105,7 +116,9 @@ const games = [
     accent: "#54e6a5",
     icon: "lenya_face/lenya_face-21.png",
     introImage: "lenya_pose/lenya_pose-06.png",
-    rules: "Жми левый и правый борт по очереди. Сбился с ритма - теряешь комбо.",
+    rules: "Лови стрелки у желтой линии. Чем дольше держишь ритм, тем быстрее идет гонка.",
+    desktop: "Нажимай стрелку влево или вправо, когда значок дошел до линии.",
+    mobile: "Тапай слева или справа, когда значок дошел до линии.",
     make: makeRowGame,
   },
   {
@@ -114,9 +127,11 @@ const games = [
     kind: "головоломка",
     desc: "Собирай одинаковые лица в ряд.",
     accent: "#f865b0",
-    icon: "lenya_face/lenya_face-04.png",
-    introImage: "lenya_face/lenya_face-04.png",
-    rules: "Меняй местами соседние лица. Три одинаковых в ряд исчезают и дают очки.",
+    icon: "lenya_face/lenya_face-14.png",
+    introImage: "lenya_face/lenya_face-14.png",
+    rules: "Меняй соседние плитки местами и собирай три одинаковые в ряд. Если ходов не осталось, игра предложит перемешать поле.",
+    desktop: "Кликни одну плитку, потом соседнюю.",
+    mobile: "Тапни одну плитку, потом соседнюю.",
     make: makeMatchGame,
   },
 ];
@@ -167,12 +182,8 @@ function circleHit(p, c) {
 
 function drawBg(name) {
   const cropped = img(bgFiles[name]);
-  const bg = img("assets/backgrounds/game-backgrounds.png");
-  const rect = bgRects[name] || bgRects.arcade;
   if (cropped) {
     ctx.drawImage(cropped, 0, 0, W, H);
-  } else if (bg) {
-    ctx.drawImage(bg, ...rect, 0, 0, W, H);
   } else {
     ctx.fillStyle = "#111020";
     ctx.fillRect(0, 0, W, H);
@@ -197,6 +208,24 @@ function drawText(text, x, y, size = 22, color = "#fff6d7", align = "left") {
   ctx.fillText(text, x + 3, y + 3);
   ctx.fillStyle = color;
   ctx.fillText(text, x, y);
+}
+
+function drawArrowGlyph(x, y, side) {
+  const dir = side === "left" ? -1 : 1;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir, 1);
+  ctx.fillStyle = "#070710";
+  ctx.fillRect(-16, -6, 22, 12);
+  ctx.beginPath();
+  ctx.moveTo(7, -18);
+  ctx.lineTo(24, 0);
+  ctx.lineTo(7, 18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.28)";
+  ctx.fillRect(-12, -4, 14, 3);
+  ctx.restore();
 }
 
 function drawImageFit(image, x, y, w, h, anchor = "center") {
@@ -293,7 +322,11 @@ function showGameIntro(meta) {
       <div>
         <p class="kicker">${meta.kind}</p>
         <h3>${meta.title}</h3>
-        <p>${meta.rules || meta.desc}</p>
+        <div class="rules-list">
+          <p><span>цель</span>${meta.rules || meta.desc}</p>
+          <p><span>компьютер</span>${meta.desktop || "Играй мышью или клавиатурой."}</p>
+          <p><span>телефон</span>${meta.mobile || "Играй касанием по экрану."}</p>
+        </div>
         <button type="button" data-begin-game>НАЧАТЬ</button>
       </div>
     </div>
@@ -530,9 +563,7 @@ function makeSearchGame() {
   let missFlash = 0;
   const effects = [];
   const backpackIds = [0, 1, 2, 3, 4, 5];
-  const objectIds = app.sprites.objects
-    .map((item, index) => item && !backpackIds.includes(index) ? index : null)
-    .filter((index) => index !== null);
+  const objectIds = [12, 13, 18, 21, 22, 60, 63, 64, 65, 66];
 
   function newRound() {
     decoys = Array.from({ length: 64 + round * 3 }, () => ({
@@ -1108,7 +1139,7 @@ function makeRowGame() {
         ctx.strokeStyle = "#fff6d7";
         ctx.lineWidth = 4;
         ctx.stroke();
-        drawText(beat.side === "left" ? "\u2190" : "\u2192", beat.x, beat.y - 17, 34, "#070710", "center");
+        drawArrowGlyph(beat.x, beat.y, beat.side);
       });
       const kick = boatKick > 0 ? Math.sin(boatKick * 44) * 13 + 18 : 0;
       drawImageFit(sprite("rowing", strokeFrame > 0 ? 1 : 0), boatX + kick, boatY - 72, 248, 118);
@@ -1137,23 +1168,29 @@ function makeMatchGame() {
   const boardX = Math.round((W - cell * size) / 2);
   const boardY = 78;
   let selected = null;
-  let grid = makeGrid();
+  let grid = [];
+  let needsShuffle = false;
+  const shuffleButton = { x: W / 2 - 150, y: 458, w: 300, h: 48 };
 
   function makeGrid() {
-    const next = [];
-    for (let i = 0; i < size * size; i += 1) {
-      const x = i % size;
-      const y = Math.floor(i / size);
-      let candidates = [...tiles];
-      if (x >= 2 && next[i - 1] === next[i - 2]) {
-        candidates = candidates.filter((tile) => tile !== next[i - 1]);
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const next = [];
+      for (let i = 0; i < size * size; i += 1) {
+        const x = i % size;
+        const y = Math.floor(i / size);
+        let candidates = [...tiles];
+        if (x >= 2 && next[i - 1] === next[i - 2]) {
+          candidates = candidates.filter((tile) => tile !== next[i - 1]);
+        }
+        if (y >= 2 && next[i - size] === next[i - size * 2]) {
+          candidates = candidates.filter((tile) => tile !== next[i - size]);
+        }
+        next[i] = choice(candidates);
       }
-      if (y >= 2 && next[i - size] === next[i - size * 2]) {
-        candidates = candidates.filter((tile) => tile !== next[i - size]);
-      }
-      next[i] = choice(candidates);
+      grid = next;
+      if (hasPossibleMove()) return next;
     }
-    return next;
+    return grid;
   }
 
   function indexAt(p) {
@@ -1192,6 +1229,29 @@ function makeMatchGame() {
     return out;
   }
 
+  function hasPossibleMove() {
+    if (!grid?.length) return true;
+    for (let i = 0; i < grid.length; i += 1) {
+      const x = i % size;
+      const neighbors = [];
+      if (x < size - 1) neighbors.push(i + 1);
+      if (i < grid.length - size) neighbors.push(i + size);
+      for (const j of neighbors) {
+        [grid[i], grid[j]] = [grid[j], grid[i]];
+        const possible = matches().size > 0;
+        [grid[i], grid[j]] = [grid[j], grid[i]];
+        if (possible) return true;
+      }
+    }
+    return false;
+  }
+
+  function shuffleGrid() {
+    selected = null;
+    grid = makeGrid();
+    needsShuffle = !hasPossibleMove();
+  }
+
   function refill(cleared) {
     cleared.forEach((i) => { grid[i] = choice(tiles); });
   }
@@ -1212,8 +1272,14 @@ function makeMatchGame() {
     drawImageFit(sprite(group, Number(id)), x, y, w, h);
   }
 
+  shuffleGrid();
+
   return {
     tap(p) {
+      if (needsShuffle) {
+        if (rectHit(p, shuffleButton)) shuffleGrid();
+        return;
+      }
       const hit = indexAt(p);
       if (hit < 0) return;
       if (selected === null) {
@@ -1228,6 +1294,8 @@ function makeMatchGame() {
       if (!clearExisting(true)) {
         [grid[selected], grid[hit]] = [grid[hit], grid[selected]];
         app.combo = 0;
+      } else {
+        needsShuffle = !hasPossibleMove();
       }
       selected = null;
     },
@@ -1244,6 +1312,10 @@ function makeMatchGame() {
         ctx.lineWidth = 3;
         ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
         drawTile(grid[i], x + 10, y + 10, cell - 20, cell - 20);
+      }
+      if (needsShuffle) {
+        drawPanel(shuffleButton.x, shuffleButton.y, shuffleButton.w, shuffleButton.h, "rgba(255,216,74,0.94)");
+        drawText("ПЕРЕМЕШАТЬ", W / 2, shuffleButton.y + 12, 22, "#17110a", "center");
       }
     },
   };
@@ -1329,11 +1401,15 @@ function makeTowerGame() {
 
 async function loadAssets() {
   const manifest = await fetch("assets/sprites/manifest.json").then((r) => r.json());
-  const paths = ["assets/backgrounds/game-backgrounds.png", ...Object.values(bgFiles)];
-  Object.entries(manifest).forEach(([group, items]) => {
-    if (group === "ui") return;
-    app.sprites[group] = items;
-    items.filter(Boolean).forEach((item) => paths.push(item.file));
+  const paths = [...Object.values(bgFiles)];
+  Object.entries(neededSprites).forEach(([group, indexes]) => {
+    app.sprites[group] = [];
+    indexes.forEach((index) => {
+      const item = manifest[group]?.[index];
+      if (!item) return;
+      app.sprites[group][index] = item;
+      paths.push(item.file);
+    });
   });
   await Promise.all(paths.map((path) => new Promise((resolve) => {
     const image = new Image();
