@@ -1,5 +1,9 @@
-const W = 960;
-const H = 540;
+const DESKTOP_W = 960;
+const DESKTOP_H = 540;
+const MOBILE_W = 630;
+const MOBILE_H = 980;
+let W = DESKTOP_W;
+let H = DESKTOP_H;
 
 const canvas = document.querySelector("#gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -176,6 +180,21 @@ function isPhoneViewport() {
   return window.matchMedia("(max-width: 620px)").matches;
 }
 
+function syncCanvasSize() {
+  const mobile = isPhoneViewport();
+  W = mobile ? MOBILE_W : DESKTOP_W;
+  H = mobile ? MOBILE_H : DESKTOP_H;
+  if (canvas.width !== W || canvas.height !== H) {
+    canvas.width = W;
+    canvas.height = H;
+    ctx.imageSmoothingEnabled = false;
+  }
+}
+
+function isMobileGameField() {
+  return isPhoneViewport() && document.body.classList.contains("is-playing");
+}
+
 function rectHit(p, r) {
   return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 }
@@ -191,6 +210,10 @@ function circleHit(p, c) {
 }
 
 function drawBg(name) {
+  if (isMobileGameField()) {
+    ctx.clearRect(0, 0, W, H);
+    return;
+  }
   const cropped = img(bgFiles[name]);
   if (cropped) {
     ctx.drawImage(cropped, 0, 0, W, H);
@@ -370,6 +393,7 @@ function finish(message) {
 }
 
 function selectGame(id) {
+  syncCanvasSize();
   const meta = games.find((game) => game.id === id);
   if (!meta) return;
   if (location.hash !== `#${id}`) {
@@ -395,6 +419,7 @@ function selectGame(id) {
 }
 
 function beginGame(id) {
+  syncCanvasSize();
   const meta = games.find((game) => game.id === id);
   if (!meta) return;
   app.activeId = id;
@@ -441,6 +466,7 @@ function togglePause() {
 }
 
 function showMenu() {
+  syncCanvasSize();
   app.running = false;
   app.paused = false;
   document.body.classList.remove("is-intro");
@@ -649,6 +675,7 @@ function makeSearchGame() {
 
 function makeWhackGame() {
   const holes = [];
+  const mobile = isPhoneViewport();
   const faces = app.sprites.lenya_face
     .map((item, index) => (item ? index : null))
     .filter((index) => index !== null);
@@ -658,9 +685,9 @@ function makeWhackGame() {
   for (let y = 0; y < 3; y += 1) {
     for (let x = 0; x < 3; x += 1) {
       holes.push({
-        x: 230 + x * 250,
-        y: 120 + y * 126,
-        r: 54,
+        x: mobile ? 150 + x * 165 : 230 + x * 250,
+        y: mobile ? 250 + y * 190 : 120 + y * 126,
+        r: mobile ? 44 : 54,
         phase: 0,
         life: 0,
         state: "hidden",
@@ -676,12 +703,13 @@ function makeWhackGame() {
   const effects = [];
 
   function visibleRect(hole) {
-    const lift = Math.sin(hole.phase * Math.PI * 0.5) * 82;
+    const lift = Math.sin(hole.phase * Math.PI * 0.5) * (mobile ? 74 : 82);
+    const face = mobile ? 118 : 172;
     return {
-      x: hole.x - 86,
+      x: hole.x - face / 2,
       y: hole.y - 8 - lift,
-      w: 172,
-      h: 158,
+      w: face,
+      h: mobile ? 126 : 158,
     };
   }
 
@@ -755,29 +783,34 @@ function makeWhackGame() {
     },
     draw() {
       drawBg("arcade");
-      drawImageFit(sprite("lenya_pose", 1), 22, 350, 122, 160, "bottom");
-      drawPanel(150, 66, 660, 430, "rgba(9, 8, 20, 0.50)");
+      if (mobile) {
+        drawImageFit(sprite("lenya_pose", 1), 22, H - 230, 118, 190, "bottom");
+      } else {
+        drawImageFit(sprite("lenya_pose", 1), 22, 350, 122, 160, "bottom");
+        drawPanel(150, 66, 660, 430, "rgba(9, 8, 20, 0.50)");
+      }
       holes.forEach((hole) => {
         ctx.fillStyle = "#0b0610";
         ctx.beginPath();
-        ctx.ellipse(hole.x, hole.y + 44, 84, 30, 0, 0, Math.PI * 2);
+        ctx.ellipse(hole.x, hole.y + (mobile ? 38 : 44), mobile ? 62 : 84, mobile ? 22 : 30, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#3a2442";
         ctx.beginPath();
-        ctx.ellipse(hole.x, hole.y + 38, 74, 24, 0, 0, Math.PI * 2);
+        ctx.ellipse(hole.x, hole.y + (mobile ? 32 : 38), mobile ? 54 : 74, mobile ? 18 : 24, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#09050d";
         ctx.beginPath();
-        ctx.ellipse(hole.x, hole.y + 32, 62, 18, 0, 0, Math.PI * 2);
+        ctx.ellipse(hole.x, hole.y + (mobile ? 28 : 32), mobile ? 46 : 62, mobile ? 14 : 18, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = "#fff6d7";
         ctx.lineWidth = 4;
         ctx.stroke();
         if (hole.state !== "hidden" || hole.phase > 0) {
-          const lift = Math.sin(hole.phase * Math.PI * 0.5) * 82;
+          const lift = Math.sin(hole.phase * Math.PI * 0.5) * (mobile ? 74 : 82);
           const image = hole.kind === "eva" ? sprite("eva", hole.evaFace) : sprite("lenya_face", hole.face);
           const shake = hole.hit > 0 ? Math.sin(hole.hit * 80) * 5 : 0;
-          drawImageFit(image, hole.x - 60 + shake, hole.y + 16 - lift, 120, 120);
+          const faceSize = mobile ? 104 : 120;
+          drawImageFit(image, hole.x - faceSize / 2 + shake, hole.y + 16 - lift, faceSize, faceSize);
         }
       });
       if (hammer) {
@@ -903,7 +936,11 @@ function makeBuildGame() {
 }
 
 function makeRaceGame() {
-  const lanes = [330, 480, 630];
+  const mobile = isPhoneViewport();
+  const road = mobile ? { x: 128, y: 0, w: 374, h: H } : { x: 230, y: 0, w: 500, h: H };
+  const lanes = mobile
+    ? [road.x + road.w * 0.23, road.x + road.w * 0.5, road.x + road.w * 0.77]
+    : [330, 480, 630];
   let lane = 1;
   let distance = 0;
   let speed = 270;
@@ -916,8 +953,6 @@ function makeRaceGame() {
   const coneIds = [17, 18, 19];
   const coinId = 52;
   const cakeIds = [60, 63, 64, 65];
-  const road = { x: 230, y: 0, w: 500, h: H };
-
   function setLane(dir) {
     lane = clamp(lane + dir, 0, 2);
   }
@@ -933,13 +968,18 @@ function makeRaceGame() {
       type,
       img: type === "coin" ? sprite("racing", coinId) : type === "cake" ? sprite("objects", choice(cakeIds)) : sprite("racing", choice(coneIds)),
       size: type === "coin" ? 50 : type === "cake" ? 56 : 58,
-      hitW: type === "cone" ? 36 : 46,
-      hitH: type === "cone" ? 40 : 46,
+      hitW: type === "cone" ? (mobile ? 32 : 36) : (mobile ? 42 : 46),
+      hitH: type === "cone" ? (mobile ? 36 : 40) : (mobile ? 42 : 46),
     });
   }
 
   function carRect() {
-    return { x: lanes[lane] - 25, y: H - 120, w: 50, h: 82 };
+    return {
+      x: lanes[lane] - (mobile ? 24 : 25),
+      y: H - (mobile ? 168 : 120),
+      w: mobile ? 48 : 50,
+      h: mobile ? 78 : 82,
+    };
   }
 
   function objectRect(obj) {
@@ -1001,32 +1041,34 @@ function makeRaceGame() {
     },
     draw() {
       drawBg("race");
-      ctx.fillStyle = "rgba(7, 9, 14, 0.34)";
-      ctx.fillRect(0, 0, W, H);
-      drawImageFit(sprite("lenya_pose", 5), 34, 366, 118, 156, "bottom");
-      ctx.fillStyle = "#252a31";
-      ctx.fillRect(road.x, road.y, road.w, road.h);
-      ctx.fillStyle = "#303640";
-      for (let y = -48 + (distance % 96); y < H; y += 96) {
-        ctx.fillRect(road.x, y, road.w, 42);
+      if (!mobile) {
+        ctx.fillStyle = "rgba(7, 9, 14, 0.34)";
+        ctx.fillRect(0, 0, W, H);
+        drawImageFit(sprite("lenya_pose", 5), 34, 366, 118, 156, "bottom");
       }
-      ctx.fillStyle = "#171a20";
-      ctx.fillRect(road.x - 26, 0, 26, H);
-      ctx.fillRect(road.x + road.w, 0, 26, H);
+      ctx.fillStyle = mobile ? "rgba(24, 28, 36, 0.76)" : "#252a31";
+      ctx.fillRect(road.x, road.y, road.w, road.h);
+      ctx.fillStyle = mobile ? "rgba(57, 64, 76, 0.52)" : "#303640";
+      for (let y = -48 + (distance % 96); y < H; y += 96) {
+        ctx.fillRect(road.x, y, road.w, mobile ? 34 : 42);
+      }
+      ctx.fillStyle = mobile ? "rgba(8, 9, 13, 0.86)" : "#171a20";
+      ctx.fillRect(road.x - 18, 0, mobile ? 18 : 26, H);
+      ctx.fillRect(road.x + road.w, 0, mobile ? 18 : 26, H);
       ctx.fillStyle = "#ffd84a";
-      ctx.fillRect(road.x + 16, 0, 7, H);
-      ctx.fillRect(road.x + road.w - 23, 0, 7, H);
+      ctx.fillRect(road.x + (mobile ? 12 : 16), 0, mobile ? 5 : 7, H);
+      ctx.fillRect(road.x + road.w - (mobile ? 17 : 23), 0, mobile ? 5 : 7, H);
       ctx.fillStyle = "#fff6d7";
       for (let y = -72 + (distance % 112); y < H; y += 112) {
-        ctx.fillRect(road.x + road.w / 3 - 5, y, 10, 58);
-        ctx.fillRect(road.x + road.w * 2 / 3 - 5, y, 10, 58);
+        ctx.fillRect(road.x + road.w / 3 - (mobile ? 4 : 5), y, mobile ? 8 : 10, mobile ? 52 : 58);
+        ctx.fillRect(road.x + road.w * 2 / 3 - (mobile ? 4 : 5), y, mobile ? 8 : 10, mobile ? 52 : 58);
       }
       objects.forEach((obj) => drawImageFit(obj.img, obj.x - obj.size / 2, obj.y, obj.size, obj.size));
       if (carFlash > 0) {
         ctx.fillStyle = carFlashColor === "#ff4f78" ? "rgba(255,79,120,0.24)" : carFlashColor === "#ffd84a" ? "rgba(255,216,74,0.24)" : "rgba(84,230,165,0.22)";
-        ctx.fillRect(lanes[lane] - 58, H - 148, 116, 126);
+        ctx.fillRect(lanes[lane] - (mobile ? 50 : 58), H - (mobile ? 188 : 148), mobile ? 100 : 116, mobile ? 118 : 126);
       }
-      drawImageFit(sprite("racing", 21), lanes[lane] - 52, H - 132, 104, 108, "bottom");
+      drawImageFit(sprite("racing", 21), lanes[lane] - (mobile ? 48 : 52), H - (mobile ? 170 : 132), mobile ? 96 : 104, mobile ? 112 : 108, "bottom");
       drawTapFeedback(effects);
       drawText(`${Math.floor(distance / 100)} м`, 36, 34, 28, "#ffd84a");
     },
@@ -1034,6 +1076,7 @@ function makeRaceGame() {
 }
 
 function makeRowGame() {
+  if (isPhoneViewport()) return makeRowGameMobile();
   const hitX = 310;
   const boatX = 230;
   const boatY = 238;
@@ -1163,6 +1206,138 @@ function makeRowGame() {
       }
       drawTapFeedback(effects);
       drawText(`${Math.floor(distance)} м`, 36, 34, 28, "#ffd84a");
+    },
+  };
+}
+
+function makeRowGameMobile() {
+  const laneX = { left: W / 2 - 96, right: W / 2 + 96 };
+  const hitY = 642;
+  const boatX = W / 2 - 172;
+  const boatY = 744;
+  const beats = [];
+  const effects = [];
+  let spawn = 0.55;
+  let water = 0;
+  let boatKick = 0;
+  let strokeFrame = 0;
+  let missFlash = 0;
+  let speed = 250;
+  let distance = 0;
+  let tempo = 0;
+
+  function spawnBeat() {
+    const side = Math.random() < 0.5 ? "left" : "right";
+    beats.push({ side, x: laneX[side], y: 92, hit: false });
+  }
+
+  function press(side) {
+    if (!app.running) return;
+    let best = null;
+    let bestDistance = Infinity;
+    beats.forEach((beat) => {
+      if (beat.hit || beat.side !== side) return;
+      const d = Math.abs(beat.y - hitY);
+      if (d < bestDistance) {
+        best = beat;
+        bestDistance = d;
+      }
+    });
+    if (best && bestDistance <= 58) {
+      best.hit = true;
+      app.score += 10 + app.combo;
+      app.combo += 1;
+      distance += 34 + app.combo * 2;
+      speed = clamp(speed + 5, 250, 430);
+      boatKick = 0.22;
+      strokeFrame = 0.28;
+      addTapFeedback(effects, best.x, hitY, "гребок", "#54e6a5");
+    } else {
+      app.score = Math.max(0, app.score - 3);
+      app.combo = 0;
+      speed = Math.max(230, speed - 18);
+      missFlash = 0.22;
+      addTapFeedback(effects, W / 2, hitY, "мимо", "#ff4f78", "cross");
+    }
+  }
+
+  return {
+    tap(p) {
+      press(p.x < W / 2 ? "left" : "right");
+    },
+    key(key) {
+      if (key === "arrowleft" || key === "a") press("left");
+      if (key === "arrowright" || key === "d") press("right");
+    },
+    update(dt) {
+      tempo += dt;
+      speed = clamp(speed + dt * (8 + tempo * 0.18), 250, 450);
+      water += speed * dt;
+      distance += speed * dt * 0.035;
+      spawn -= dt;
+      if (spawn <= 0) {
+        spawnBeat();
+        spawn = rand(0.56, 0.9) * clamp(1 - tempo * 0.012, 0.66, 1);
+      }
+      for (let i = beats.length - 1; i >= 0; i -= 1) {
+        const beat = beats[i];
+        beat.y += speed * dt;
+        if (!beat.hit && beat.y > hitY + 68) {
+          beat.hit = true;
+          app.combo = 0;
+          missFlash = 0.18;
+          addTapFeedback(effects, beat.x, hitY, "поздно", "#ff4f78", "cross");
+        }
+        if (beat.y > H + 70 || beat.hit) beats.splice(i, 1);
+      }
+      boatKick = Math.max(0, boatKick - dt);
+      strokeFrame = Math.max(0, strokeFrame - dt);
+      missFlash = Math.max(0, missFlash - dt);
+      updateTapFeedback(effects, dt);
+    },
+    draw() {
+      drawBg("river");
+      ctx.fillStyle = "rgba(4, 18, 34, 0.22)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = "rgba(255,246,215,0.62)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(laneX.left, 104);
+      ctx.lineTo(laneX.left, H - 88);
+      ctx.moveTo(laneX.right, 104);
+      ctx.lineTo(laneX.right, H - 88);
+      ctx.stroke();
+      for (let y = -80 + (water % 118); y < H + 80; y += 118) {
+        drawImageFit(sprite("rowing", 2), laneX.left - 28, y, 56, 84);
+        drawImageFit(sprite("rowing", 2), laneX.right - 28, y + 44, 56, 84);
+      }
+      ctx.strokeStyle = "#ffd84a";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(90, hitY);
+      ctx.lineTo(W - 90, hitY);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255,216,74,0.16)";
+      ctx.fillRect(88, hitY - 46, W - 176, 92);
+      beats.forEach((beat) => {
+        const ready = Math.abs(beat.y - hitY) <= 58;
+        ctx.fillStyle = ready ? "#ffd84a" : beat.side === "left" ? "#43b6ff" : "#ff4f78";
+        ctx.beginPath();
+        ctx.arc(beat.x, beat.y, ready ? 36 : 29, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff6d7";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        drawArrowGlyph(beat.x, beat.y, beat.side);
+      });
+      const kick = boatKick > 0 ? Math.sin(boatKick * 44) * 18 + 18 : 0;
+      drawImageFit(sprite("rowing", strokeFrame > 0 ? 1 : 0), boatX, boatY - 82 - kick, 344, 150);
+      if (missFlash > 0) {
+        ctx.fillStyle = "rgba(255,79,120,0.22)";
+        ctx.fillRect(0, 0, W, H);
+      }
+      drawTapFeedback(effects);
+      drawText(`${Math.floor(distance)} м`, 34, 34, 28, "#ffd84a");
     },
   };
 }
@@ -1472,6 +1647,7 @@ async function loadAssets() {
 }
 
 async function init() {
+  syncCanvasSize();
   totalScoreEl.textContent = totalScore();
   renderMenu();
   showOverlay("Загрузка", "Готовим спрайты и мини-игры.");
@@ -1486,6 +1662,19 @@ async function init() {
   } else {
     showMenu();
   }
+  window.addEventListener("resize", () => {
+    const oldW = W;
+    const oldH = H;
+    syncCanvasSize();
+    if (oldW === W && oldH === H) return;
+    if (app.running && app.activeId) {
+      beginGame(app.activeId);
+    } else if (app.activeId) {
+      selectGame(app.activeId);
+    } else {
+      showMenu();
+    }
+  });
   requestAnimationFrame(tick);
 }
 
