@@ -454,14 +454,14 @@ canvas {
   }
 
   .canvas-frame {
-    min-height: 70dvh;
+    min-height: 0;
   }
 
   canvas {
     max-height: none;
     width: 100%;
-    height: min(70dvh, 620px);
-    min-height: 430px;
+    height: auto;
+    min-height: 0;
   }
 }
 
@@ -572,14 +572,70 @@ canvas {
   }
 
   .canvas-frame {
-    min-height: 68dvh;
+    min-height: 0;
     margin-inline: -10px;
     border-inline-width: 0;
   }
 
   canvas {
-    height: 68dvh;
-    min-height: 500px;
+    width: min(158vw, 660px);
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
+  body.is-playing .shell {
+    padding: max(4px, env(safe-area-inset-top)) 0 max(8px, env(safe-area-inset-bottom));
+  }
+
+  body.is-playing .topbar,
+  body.is-playing .menu,
+  body.is-playing .stage-head h2,
+  body.is-playing .stage-head .kicker {
+    display: none;
+  }
+
+  body.is-playing .cabinet {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  body.is-playing .stage-head {
+    margin: 0;
+    padding: 6px 8px;
+    border-inline: 0;
+    border-top: 0;
+    box-shadow: none;
+  }
+
+  body.is-playing .hud-wrap {
+    grid-template-columns: minmax(0, 1fr) 68px;
+  }
+
+  body.is-playing .hud div {
+    border-width: 2px;
+  }
+
+  body.is-playing .hud-action {
+    min-height: 38px;
+    border-width: 3px;
+    font-size: 0.72rem;
+  }
+
+  body.is-playing .canvas-frame {
+    min-height: 0;
+    margin-inline: 0;
+    border-block-width: 3px;
+    box-shadow: none;
+  }
+
+  body.is-playing canvas {
+    width: min(174vw, 720px);
   }
 
   .intro-card {

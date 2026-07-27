@@ -172,6 +172,10 @@ function choice(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+function isPhoneViewport() {
+  return window.matchMedia("(max-width: 620px)").matches;
+}
+
 function rectHit(p, r) {
   return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 }
@@ -348,6 +352,7 @@ function hideOverlay() {
 function finish(message) {
   app.running = false;
   app.paused = false;
+  document.body.classList.remove("is-playing");
   pauseBtn.hidden = true;
   const roundScore = Math.max(0, Math.round(app.score));
   if (app.activeId) {
@@ -373,6 +378,7 @@ function selectGame(id) {
   app.metric = "";
   app.running = false;
   app.paused = false;
+  document.body.classList.remove("is-playing");
   restartBtn.hidden = true;
   pauseBtn.hidden = true;
   app.game = makeGamePreview(meta);
@@ -402,6 +408,7 @@ function beginGame(id) {
   app.game = meta.make();
   app.time = Number(meta.duration || app.time || 35);
   app.running = true;
+  document.body.classList.add("is-playing");
   titleEl.textContent = meta.title;
   kindEl.textContent = meta.kind;
   hideOverlay();
@@ -436,6 +443,7 @@ function togglePause() {
 function showMenu() {
   app.running = false;
   app.paused = false;
+  document.body.classList.remove("is-playing");
   restartBtn.hidden = true;
   pauseBtn.hidden = true;
   app.game = makeAttractGame();
@@ -573,9 +581,10 @@ function makeSearchGame() {
   const objectIds = [12, 13, 18, 21, 22, 60, 63, 64, 65, 66];
 
   function newRound() {
+    const sideSafe = isPhoneViewport() ? 190 : 35;
     decoys = Array.from({ length: 64 + round * 3 }, () => ({
       img: sprite("objects", choice(objectIds)),
-      x: rand(35, W - 95),
+      x: rand(sideSafe, W - sideSafe - 70),
       y: rand(104, H - 86),
       w: rand(34, 78),
       h: rand(30, 72),
@@ -584,7 +593,7 @@ function makeSearchGame() {
     }));
     target = {
       img: sprite("objects", choice(backpackIds)),
-      x: rand(70, W - 130),
+      x: rand(sideSafe + 18, W - sideSafe - 92),
       y: rand(128, H - 112),
       w: 72,
       h: 68,
