@@ -569,11 +569,11 @@ function makeAttractGame() {
       const mobile = isPhoneViewport();
       if (mobile) {
         drawPanel(28, 82, W - 56, 340, "rgba(9, 8, 20, 0.84)");
-        drawText("\u0414\u0420-\u0410\u0420\u041a\u0410\u0414\u0410", W / 2, 124, 46, "#ffd84a", "center");
+        drawText("С Днем Рождения", W / 2, 124, 46, "#ffd84a", "center");
         drawText("\u0412\u044b\u0431\u0435\u0440\u0438 \u0438\u0433\u0440\u0443 \u0441\u0432\u0435\u0440\u0445\u0443", W / 2, 188, 25, "#fff6d7", "center");
       } else {
         drawPanel(90, 82, 780, 360, "rgba(9, 8, 20, 0.84)");
-        drawText("\u0414\u0420-\u0410\u0420\u041a\u0410\u0414\u0410", W / 2, 118, 54, "#ffd84a", "center");
+        drawText("С Днем Рождения", W / 2, 118, 54, "#ffd84a", "center");
         drawText("\u0412\u044b\u0431\u0435\u0440\u0438 \u043a\u0430\u0440\u0442\u0440\u0438\u0434\u0436 \u0441\u043b\u0435\u0432\u0430", W / 2, 190, 25, "#fff6d7", "center");
       }
       const frame = Math.floor(t);
