@@ -1368,10 +1368,10 @@ function makeMatchGame() {
   let clearTimer = 0;
   let pendingScore = true;
   const shuffleButton = {
-    x: W / 2 - 150,
-    y: mobile ? Math.min(H - 82, boardY + cell * size + 28) : 458,
-    w: 300,
-    h: 48,
+    x: W / 2 - (mobile ? 190 : 150),
+    y: mobile ? boardY + Math.round((cell * size) / 2) - 36 : 458,
+    w: mobile ? 380 : 300,
+    h: mobile ? 72 : 48,
   };
 
   function makeGrid() {
@@ -1481,13 +1481,32 @@ function makeMatchGame() {
     drawImageFit(sprite(group, Number(id)), x, y, w, h);
   }
 
+  function shuffleHitbox() {
+    const pad = mobile ? 26 : 0;
+    return {
+      x: shuffleButton.x - pad,
+      y: shuffleButton.y - pad,
+      w: shuffleButton.w + pad * 2,
+      h: shuffleButton.h + pad * 2,
+    };
+  }
+
+  function boardHitbox() {
+    return {
+      x: boardX - 18,
+      y: boardY - 18,
+      w: cell * size + 36,
+      h: cell * size + 36,
+    };
+  }
+
   shuffleGrid();
 
   return {
     tap(p) {
       if (clearTimer > 0) return;
       if (needsShuffle) {
-        if (rectHit(p, shuffleButton)) shuffleGrid();
+        if (rectHit(p, shuffleHitbox()) || (mobile && rectHit(p, boardHitbox()))) shuffleGrid();
         return;
       }
       const hit = indexAt(p);
@@ -1548,7 +1567,7 @@ function makeMatchGame() {
       }
       if (needsShuffle) {
         drawPanel(shuffleButton.x, shuffleButton.y, shuffleButton.w, shuffleButton.h, "rgba(255,216,74,0.94)");
-        drawText("ПЕРЕМЕШАТЬ", W / 2, shuffleButton.y + 12, 22, "#17110a", "center");
+        drawText("\u041f\u0415\u0420\u0415\u041c\u0415\u0428\u0410\u0422\u042c", W / 2, shuffleButton.y + (mobile ? 22 : 12), mobile ? 24 : 22, "#17110a", "center");
       }
     },
   };
