@@ -634,6 +634,7 @@ canvas {
     background-image: url("assets/backgrounds/mobile-stage/arcade-new.png");
     background-position: center;
     background-size: cover;
+    touch-action: pan-y;
   }
 
   canvas {
@@ -643,6 +644,7 @@ canvas {
     max-height: none;
     min-height: 0;
     object-fit: contain;
+    touch-action: pan-y;
   }
 
   body[data-active-game="search"] .canvas-frame {
