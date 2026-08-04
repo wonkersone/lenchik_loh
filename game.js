@@ -33,8 +33,7 @@ const app = {
   paused: false,
   lastTime: 0,
   score: 0,
-  time: 0,
-  metric: "",
+  metric: null,
   pointer: { x: W / 2, y: H / 2, down: false },
   keys: new Set(),
 };
@@ -67,10 +66,9 @@ const games = [
     accent: "#43b6ff",
     icon: "lenya_face/lenya_face-23.png",
     introImage: "lenya_pose/lenya_pose-08.png",
-    rules: "На поле спрятан ровно один рюкзак. Каждый раунд он другого цвета, а вокруг становится больше лишних вещей.",
+    rules: "Найди все шесть рюкзаков. В каждом раунде спрятан ровно один рюкзак нового цвета, а вокруг становится больше лишних вещей.",
     desktop: "Кликай по рюкзаку мышью.",
     mobile: "Касайся найденного рюкзака пальцем.",
-    duration: 42,
     make: makeSearchGame,
   },
   {
@@ -81,10 +79,9 @@ const games = [
     accent: "#ff4f78",
     icon: "lenya_face/lenya_face-04.png",
     introImage: "eva/eva-03.png",
-    rules: "Из лунок быстро выглядывают лица. Попадай по Лене и не трогай Еву с тортом.",
+    rules: "Попади по Лене 20 раз. После третьего случайного удара по Еве игра закончится.",
     desktop: "Наводи мышью и кликай по Лене.",
     mobile: "Бей по Лене быстрым тапом.",
-    duration: 30,
     make: makeWhackGame,
   },
   {
@@ -95,10 +92,9 @@ const games = [
     accent: "#ff9f43",
     icon: "lenya_face/lenya_face-16.png",
     introImage: "lenya_pose/lenya_pose-02.png",
-    rules: "Строй башню из этажей. Блок должен хотя бы краем попасть на предыдущий, а ровные попадания дают больше очков.",
+    rules: "Построй 12 этажей. Блок должен хотя бы краем попасть на предыдущий, а полный промах завершит стройку.",
     desktop: "Нажимай пробел или Enter, когда этаж над башней.",
     mobile: "Тапай по экрану в момент, когда этаж над башней.",
-    duration: 40,
     make: makeBuildGame,
   },
   {
@@ -109,10 +105,9 @@ const games = [
     accent: "#ffd84a",
     icon: "lenya_face/lenya_face-17.png",
     introImage: "lenya_pose/lenya_pose-05.png",
-    rules: "Едь по полосам, собирай монеты и куски торта. Конусы сбивают темп, торт временно разгоняет машину.",
+    rules: "Доедь 250 метров, собирай монеты и куски торта. После третьего столкновения с конусом заезд закончится.",
     desktop: "Управляй стрелками влево и вправо.",
     mobile: "Тапай по левой или правой половине экрана.",
-    duration: 36,
     make: makeRaceGame,
   },
   {
@@ -123,10 +118,9 @@ const games = [
     accent: "#54e6a5",
     icon: "lenya_face/lenya_face-21.png",
     introImage: "lenya_pose/lenya_pose-06.png",
-    rules: "Лови стрелки у желтой линии. Чем дольше держишь ритм, тем быстрее идет гонка.",
+    rules: "Сделай 20 точных гребков у желтой линии. Пять ошибок или пропущенных стрелок закончат гонку.",
     desktop: "Нажимай стрелку влево или вправо, когда значок дошел до линии.",
     mobile: "Тапай слева или справа, когда значок дошел до линии.",
-    duration: 34,
     make: makeRowGame,
   },
   {
@@ -137,10 +131,9 @@ const games = [
     accent: "#f865b0",
     icon: "lenya_face/lenya_face-14.png",
     introImage: "lenya_pose/lenya_pose-04.png",
-    rules: "Меняй соседние плитки местами и собирай три одинаковые в ряд. Если ходов не осталось, игра предложит перемешать поле.",
+    rules: "Меняй соседние плитки местами и собирай три одинаковые в ряд. Раунд закончится, когда на поле не останется возможных ходов.",
     desktop: "Кликни одну плитку, потом соседнюю.",
     mobile: "Тапни одну плитку, потом соседнюю.",
-    duration: 45,
     make: makeMatchGame,
   },
 ];
@@ -270,6 +263,18 @@ function drawImageFit(image, x, y, w, h, anchor = "center") {
   ctx.drawImage(image, dx, dy, dw, dh);
 }
 
+function drawImageFitRotated(image, centerX, centerY, w, h, angle) {
+  if (!image) return;
+  const scale = Math.min(w / image.width, h / image.height);
+  const dw = image.width * scale;
+  const dh = image.height * scale;
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.rotate(angle);
+  ctx.drawImage(image, -dw / 2, -dh / 2, dw, dh);
+  ctx.restore();
+}
+
 function addTapFeedback(effects, x, y, text, color, kind = "ring") {
   effects.push({ x, y, text, color, kind, t: 0.42, life: 0.42 });
 }
@@ -317,10 +322,11 @@ function drawLayerBlock(block, x = block.x - block.w / 2, y = block.y, w = block
 }
 
 function updateHud() {
-  hud.innerHTML = [
-    ["счет", app.score],
-    ["время", Math.ceil(app.time)],
-  ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  const stats = [["\u0441\u0447\u0435\u0442", app.score]];
+  if (app.metric) stats.push([app.metric.label, app.metric.value]);
+  hud.innerHTML = stats
+    .map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`)
+    .join("");
   totalScoreEl.textContent = totalScore();
   pauseBtn.textContent = app.paused ? "ДАЛЬШЕ" : "ПАУЗА";
 }
@@ -402,8 +408,7 @@ function selectGame(id) {
   app.activeId = id;
   document.body.dataset.activeGame = id;
   app.score = 0;
-  app.time = 0;
-  app.metric = "";
+  app.metric = null;
   app.running = false;
   app.paused = false;
   document.body.classList.remove("is-playing");
@@ -425,15 +430,13 @@ function beginGame(id) {
   app.activeId = id;
   document.body.dataset.activeGame = id;
   app.score = 0;
-  app.time = Number(meta.duration || 35);
-  app.metric = "";
+  app.metric = null;
   app.running = false;
   app.paused = false;
   restartBtn.hidden = false;
   pauseBtn.hidden = false;
   app.lastTime = performance.now();
   app.game = meta.make();
-  app.time = Number(meta.duration || app.time || 35);
   app.running = true;
   document.body.classList.add("is-playing");
   document.body.classList.remove("is-ended");
@@ -480,7 +483,7 @@ function showMenu() {
   titleEl.textContent = "Выбери игру";
   kindEl.textContent = "READY";
   app.score = 0;
-  app.time = 0;
+  app.metric = null;
   updateHud();
   renderMenu();
   if (location.hash) {
@@ -547,10 +550,6 @@ window.addEventListener("keyup", (event) => {
 function tick(now) {
   const dt = Math.min(0.05, (now - app.lastTime) / 1000 || 0);
   app.lastTime = now;
-  if (app.running && !app.paused) {
-    app.time = Math.max(0, app.time - dt);
-    if (app.time <= 0) finish("Время вышло");
-  }
   if ((app.running && !app.paused) || app.game?.idle) app.game?.update?.(dt);
   app.game?.draw?.();
   updateHud();
@@ -612,12 +611,13 @@ function makeGamePreview(meta) {
 }
 
 function makeSearchGame() {
-  let round = 1;
+  let found = 0;
   let target = null;
   let decoys = [];
   let missFlash = 0;
   const effects = [];
   const backpackIds = [0, 1, 2, 3, 4, 5];
+  const backpackOrder = [...backpackIds].sort(() => Math.random() - 0.5);
   const objectIds = [12, 13, 18, 21, 22, 60, 63, 64, 65, 66];
 
   function newRound() {
@@ -625,7 +625,7 @@ function makeSearchGame() {
     const sideSafe = mobile ? 24 : 35;
     const topSafe = mobile ? 118 : 104;
     const bottomSafe = mobile ? 72 : 86;
-    decoys = Array.from({ length: 64 + round * 3 }, () => ({
+    decoys = Array.from({ length: 67 + found * 3 }, () => ({
       img: sprite("objects", choice(objectIds)),
       x: rand(sideSafe, W - sideSafe - 70),
       y: rand(topSafe, H - bottomSafe),
@@ -635,7 +635,7 @@ function makeSearchGame() {
       alpha: 1,
     }));
     target = {
-      img: sprite("objects", choice(backpackIds)),
+      img: sprite("objects", backpackOrder[found]),
       x: rand(sideSafe + 12, W - sideSafe - 92),
       y: rand(topSafe + 12, H - bottomSafe - 40),
       w: 72,
@@ -643,6 +643,7 @@ function makeSearchGame() {
       label: "рюкзак",
     };
     decoys.splice(Math.floor(Math.random() * decoys.length), 0, target);
+    app.metric = { label: "\u0440\u044e\u043a\u0437\u0430\u043a\u0438", value: `${found}/6` };
   }
 
   newRound();
@@ -653,7 +654,12 @@ function makeSearchGame() {
       if (rectHit(p, target)) {
         addTapFeedback(effects, target.x + target.w / 2, target.y + target.h / 2, "нашел", "#54e6a5");
         app.score += 20;
-        round += 1;
+        found += 1;
+        app.metric = { label: "\u0440\u044e\u043a\u0437\u0430\u043a\u0438", value: `${found}/6` };
+        if (found >= backpackOrder.length) {
+          finish("\u0412\u0441\u0435 \u0440\u044e\u043a\u0437\u0430\u043a\u0438 \u043d\u0430\u0439\u0434\u0435\u043d\u044b");
+          return;
+        }
         newRound();
       } else {
         addTapFeedback(effects, p.x, p.y, "мимо", "#ff4f78", "cross");
@@ -713,7 +719,16 @@ function makeWhackGame() {
   }
   let spawn = 0.7;
   let hammer = null;
+  let lives = 3;
+  let lenyaHits = 0;
   const effects = [];
+
+  function updateWhackMetric() {
+    app.metric = {
+      label: "\u0436\u0438\u0437\u043d\u0438 \u2022 \u041b\u0435\u043d\u044f",
+      value: `${lives} \u2022 ${lenyaHits}/20`,
+    };
+  }
 
   function visibleRect(hole) {
     const lift = Math.sin(hole.phase * Math.PI * 0.5) * (mobile ? 74 : 82);
@@ -738,6 +753,8 @@ function makeWhackGame() {
     hole.evaFace = choice(evaFaces);
   }
 
+  updateWhackMetric();
+
   return {
     tap(p) {
       if (!app.running) return;
@@ -753,9 +770,19 @@ function makeWhackGame() {
       if (hit.kind === "eva") {
         addTapFeedback(effects, hit.x, hit.y - 50, "ошибка", "#ff4f78", "cross");
         app.score = Math.max(0, app.score - 14);
+        lives -= 1;
+        updateWhackMetric();
+        if (lives <= 0) {
+          finish("\u0415\u0432\u0443 \u0437\u0430\u0434\u0435\u043b\u0438 \u0442\u0440\u0438\u0436\u0434\u044b");
+        }
       } else {
         addTapFeedback(effects, hit.x, hit.y - 50, "попал", "#54e6a5");
         app.score += 10;
+        lenyaHits += 1;
+        updateWhackMetric();
+        if (lenyaHits >= 20) {
+          finish("\u041b\u0435\u043d\u0447\u0438\u043a \u043f\u043e\u0431\u0435\u0436\u0434\u0435\u043d");
+        }
       }
       hit.hit = 0.16;
       hit.state = "falling";
@@ -858,6 +885,8 @@ function makeBuildGame() {
   const craneY = mobile ? 190 : 84;
   const craneHeadY = mobile ? 164 : 58;
   const craneHookY = mobile ? 172 : 66;
+  const targetFloors = 12;
+  app.metric = { label: "\u044d\u0442\u0430\u0436\u0438", value: `0/${targetFloors}` };
 
   function makeBlock(x, y, w) {
     return {
@@ -919,6 +948,11 @@ function makeBuildGame() {
           app.score += Math.round(14 + overlap / 12);
           if (offset < 14) app.score += 8;
           falling = null;
+          const floors = stack.length - 1;
+          app.metric = { label: "\u044d\u0442\u0430\u0436\u0438", value: `${floors}/${targetFloors}` };
+          if (floors >= targetFloors) {
+            finish("\u0417\u0434\u0430\u043d\u0438\u0435 \u0433\u043e\u0442\u043e\u0432\u043e");
+          }
         }
       }
     },
@@ -962,11 +996,21 @@ function makeRaceGame() {
   let carFlash = 0;
   let carFlashColor = "#54e6a5";
   let cakeBoost = 0;
+  let lives = 3;
+  const targetMeters = 250;
   const objects = [];
   const effects = [];
   const coneIds = [17, 18, 19];
   const coinId = 52;
   const cakeIds = [60, 63, 64, 65];
+
+  function updateRaceMetric() {
+    const meters = Math.min(targetMeters, Math.floor(distance / 100));
+    app.metric = {
+      label: "\u0436\u0438\u0437\u043d\u0438 \u2022 \u0444\u0438\u043d\u0438\u0448",
+      value: `${lives} \u2022 ${meters}/${targetMeters}\u043c`,
+    };
+  }
   function setLane(dir) {
     lane = clamp(lane + dir, 0, 2);
   }
@@ -996,6 +1040,8 @@ function makeRaceGame() {
     };
   }
 
+  updateRaceMetric();
+
   function objectRect(obj) {
     return { x: obj.x - obj.hitW / 2, y: obj.y + 10, w: obj.hitW, h: obj.hitH };
   }
@@ -1011,6 +1057,11 @@ function makeRaceGame() {
     update(dt) {
       const roadSpeed = speed + (cakeBoost > 0 ? 135 : 0);
       distance += roadSpeed * dt;
+      updateRaceMetric();
+      if (distance >= targetMeters * 100) {
+        finish("\u0424\u0438\u043d\u0438\u0448!");
+        return;
+      }
       spawn -= dt;
       if (spawn <= 0) {
         addObject();
@@ -1040,9 +1091,16 @@ function makeRaceGame() {
           } else {
             app.score = Math.max(0, app.score - 10);
             speed = Math.max(220, speed - 55);
+            lives -= 1;
+            updateRaceMetric();
             carFlash = 0.28;
             carFlashColor = "#ff4f78";
             addTapFeedback(effects, obj.x, obj.y + 30, "удар", "#ff4f78", "cross");
+            if (lives <= 0) {
+              objects.splice(i, 1);
+              finish("\u041c\u0430\u0448\u0438\u043d\u0430 \u0441\u043e\u0448\u043b\u0430 \u0441 \u0442\u0440\u0430\u0441\u0441\u044b");
+              return;
+            }
           }
           objects.splice(i, 1);
         } else if (obj.y > H + 80) {
@@ -1101,6 +1159,22 @@ function makeRowGame() {
   let speed = 250;
   let distance = 0;
   let tempo = 0;
+  let lives = 5;
+  let strokes = 0;
+  const targetStrokes = 20;
+
+  function updateRowMetric() {
+    app.metric = {
+      label: "\u0436\u0438\u0437\u043d\u0438 \u2022 \u0433\u0440\u0435\u0431\u043a\u0438",
+      value: `${lives} \u2022 ${strokes}/${targetStrokes}`,
+    };
+  }
+
+  function loseLife(message) {
+    lives -= 1;
+    updateRowMetric();
+    if (lives <= 0) finish(message);
+  }
 
   function spawnBeat() {
     beats.push({
@@ -1127,17 +1201,23 @@ function makeRowGame() {
       best.hit = true;
       app.score += 9;
       distance += 38;
+      strokes += 1;
       speed = clamp(speed + 5, 250, 430);
       boatKick = 0.22;
       strokeFrame = 0.28;
       addTapFeedback(effects, hitX, best.y, "гребок", "#54e6a5");
+      updateRowMetric();
+      if (strokes >= targetStrokes) finish("\u0424\u0438\u043d\u0438\u0448!");
     } else {
       app.score = Math.max(0, app.score - 3);
       speed = Math.max(230, speed - 18);
       missFlash = 0.22;
       addTapFeedback(effects, hitX, H / 2, "мимо", "#ff4f78", "cross");
+      loseLife("\u0420\u0438\u0442\u043c \u043f\u043e\u0442\u0435\u0440\u044f\u043d");
     }
   }
+
+  updateRowMetric();
 
   return {
     tap(p) {
@@ -1151,7 +1231,6 @@ function makeRowGame() {
       tempo += dt;
       speed = clamp(speed + dt * (8 + tempo * 0.18), 250, 450);
       water += speed * dt;
-      distance += speed * dt * 0.035;
       spawn -= dt;
       if (spawn <= 0) {
         spawnBeat();
@@ -1164,6 +1243,8 @@ function makeRowGame() {
           beat.hit = true;
           missFlash = 0.18;
           addTapFeedback(effects, hitX, beat.y, "поздно", "#ff4f78", "cross");
+          loseLife("\u0420\u0438\u0442\u043c \u043f\u043e\u0442\u0435\u0440\u044f\u043d");
+          if (!app.running) return;
         }
         if (beat.x < -70 || beat.hit) beats.splice(i, 1);
       }
@@ -1207,7 +1288,14 @@ function makeRowGame() {
         drawArrowGlyph(beat.x, beat.y, beat.side);
       });
       const kick = boatKick > 0 ? Math.sin(boatKick * 44) * 13 + 18 : 0;
-      drawImageFit(sprite("rowing", strokeFrame > 0 ? 1 : 0), boatX + 50 + kick, boatY - 150, 118, 248);
+      drawImageFitRotated(
+        sprite("rowing", strokeFrame > 0 ? 1 : 0),
+        boatX + 109 + kick,
+        boatY - 26,
+        118,
+        248,
+        Math.PI / 2,
+      );
       if (missFlash > 0) {
         ctx.fillStyle = "rgba(255,79,120,0.22)";
         ctx.fillRect(0, 0, W, H);
@@ -1233,6 +1321,22 @@ function makeRowGameMobile() {
   let speed = 250;
   let distance = 0;
   let tempo = 0;
+  let lives = 5;
+  let strokes = 0;
+  const targetStrokes = 20;
+
+  function updateRowMetric() {
+    app.metric = {
+      label: "\u0436\u0438\u0437\u043d\u0438 \u2022 \u0433\u0440\u0435\u0431\u043a\u0438",
+      value: `${lives} \u2022 ${strokes}/${targetStrokes}`,
+    };
+  }
+
+  function loseLife(message) {
+    lives -= 1;
+    updateRowMetric();
+    if (lives <= 0) finish(message);
+  }
 
   function spawnBeat() {
     const side = Math.random() < 0.5 ? "left" : "right";
@@ -1255,17 +1359,23 @@ function makeRowGameMobile() {
       best.hit = true;
       app.score += 9;
       distance += 38;
+      strokes += 1;
       speed = clamp(speed + 5, 250, 430);
       boatKick = 0.22;
       strokeFrame = 0.28;
       addTapFeedback(effects, best.x, hitY, "гребок", "#54e6a5");
+      updateRowMetric();
+      if (strokes >= targetStrokes) finish("\u0424\u0438\u043d\u0438\u0448!");
     } else {
       app.score = Math.max(0, app.score - 3);
       speed = Math.max(230, speed - 18);
       missFlash = 0.22;
       addTapFeedback(effects, W / 2, hitY, "мимо", "#ff4f78", "cross");
+      loseLife("\u0420\u0438\u0442\u043c \u043f\u043e\u0442\u0435\u0440\u044f\u043d");
     }
   }
+
+  updateRowMetric();
 
   return {
     tap(p) {
@@ -1279,7 +1389,6 @@ function makeRowGameMobile() {
       tempo += dt;
       speed = clamp(speed + dt * (8 + tempo * 0.18), 250, 450);
       water += speed * dt;
-      distance += speed * dt * 0.035;
       spawn -= dt;
       if (spawn <= 0) {
         spawnBeat();
@@ -1292,6 +1401,8 @@ function makeRowGameMobile() {
           beat.hit = true;
           missFlash = 0.18;
           addTapFeedback(effects, beat.x, hitY, "поздно", "#ff4f78", "cross");
+          loseLife("\u0420\u0438\u0442\u043c \u043f\u043e\u0442\u0435\u0440\u044f\u043d");
+          if (!app.running) return;
         }
         if (beat.y > H + 70 || beat.hit) beats.splice(i, 1);
       }
@@ -1363,16 +1474,9 @@ function makeMatchGame() {
   const boardY = mobile ? Math.round((H - cell * size) / 2) : 78;
   let selected = null;
   let grid = [];
-  let needsShuffle = false;
   let clearing = new Set();
   let clearTimer = 0;
   let pendingScore = true;
-  const shuffleButton = {
-    x: W / 2 - (mobile ? 190 : 150),
-    y: mobile ? boardY + Math.round((cell * size) / 2) - 36 : 458,
-    w: mobile ? 380 : 300,
-    h: mobile ? 72 : 48,
-  };
 
   function makeGrid() {
     for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -1431,8 +1535,9 @@ function makeMatchGame() {
     return out;
   }
 
-  function hasPossibleMove() {
-    if (!grid?.length) return true;
+  function possibleMoveCount() {
+    if (!grid?.length) return 0;
+    let count = 0;
     for (let i = 0; i < grid.length; i += 1) {
       const x = i % size;
       const neighbors = [];
@@ -1442,18 +1547,22 @@ function makeMatchGame() {
         [grid[i], grid[j]] = [grid[j], grid[i]];
         const possible = matches().size > 0;
         [grid[i], grid[j]] = [grid[j], grid[i]];
-        if (possible) return true;
+        if (possible) count += 1;
       }
     }
-    return false;
+    return count;
   }
 
-  function shuffleGrid() {
+  function hasPossibleMove() {
+    return possibleMoveCount() > 0;
+  }
+
+  function startGrid() {
     selected = null;
     clearing = new Set();
     clearTimer = 0;
     grid = makeGrid();
-    needsShuffle = !hasPossibleMove();
+    app.metric = { label: "\u0445\u043e\u0434\u044b", value: possibleMoveCount() };
   }
 
   function refill(cleared) {
@@ -1466,7 +1575,6 @@ function makeMatchGame() {
     clearTimer = 0.24;
     pendingScore = addScore;
     selected = null;
-    needsShuffle = false;
     return true;
   }
 
@@ -1481,34 +1589,17 @@ function makeMatchGame() {
     drawImageFit(sprite(group, Number(id)), x, y, w, h);
   }
 
-  function shuffleHitbox() {
-    const pad = mobile ? 26 : 0;
-    return {
-      x: shuffleButton.x - pad,
-      y: shuffleButton.y - pad,
-      w: shuffleButton.w + pad * 2,
-      h: shuffleButton.h + pad * 2,
-    };
+  function updateMoves() {
+    const moves = possibleMoveCount();
+    app.metric = { label: "\u0445\u043e\u0434\u044b", value: moves };
+    if (moves === 0) finish("\u0425\u043e\u0434\u043e\u0432 \u0431\u043e\u043b\u044c\u0448\u0435 \u043d\u0435\u0442");
   }
 
-  function boardHitbox() {
-    return {
-      x: boardX - 18,
-      y: boardY - 18,
-      w: cell * size + 36,
-      h: cell * size + 36,
-    };
-  }
-
-  shuffleGrid();
+  startGrid();
 
   return {
     tap(p) {
       if (clearTimer > 0) return;
-      if (needsShuffle) {
-        if (rectHit(p, shuffleHitbox()) || (mobile && rectHit(p, boardHitbox()))) shuffleGrid();
-        return;
-      }
       const hit = indexAt(p);
       if (hit < 0) return;
       if (selected === null) {
@@ -1522,8 +1613,6 @@ function makeMatchGame() {
       [grid[selected], grid[hit]] = [grid[hit], grid[selected]];
       if (!clearExisting(true)) {
         [grid[selected], grid[hit]] = [grid[hit], grid[selected]];
-      } else {
-        needsShuffle = !hasPossibleMove();
       }
       selected = null;
     },
@@ -1536,10 +1625,10 @@ function makeMatchGame() {
           }
           refill(clearing);
           clearing = new Set();
-          if (!clearExisting(true)) needsShuffle = !hasPossibleMove();
+          if (!clearExisting(true)) updateMoves();
         }
-      } else if (!needsShuffle && !clearExisting(true)) {
-        needsShuffle = !hasPossibleMove();
+      } else if (!clearExisting(true)) {
+        updateMoves();
       }
     },
     draw() {
@@ -1564,10 +1653,6 @@ function makeMatchGame() {
         }
         const inset = isClearing ? 10 + (1 - clearPulse) * 18 : 10;
         drawTile(grid[i], x + inset, y + inset, cell - inset * 2, cell - inset * 2);
-      }
-      if (needsShuffle) {
-        drawPanel(shuffleButton.x, shuffleButton.y, shuffleButton.w, shuffleButton.h, "rgba(255,216,74,0.94)");
-        drawText("\u041f\u0415\u0420\u0415\u041c\u0415\u0428\u0410\u0422\u042c", W / 2, shuffleButton.y + (mobile ? 22 : 12), mobile ? 24 : 22, "#17110a", "center");
       }
     },
   };
